@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f1220" />
+  <title>useContext — Learn React Hooks</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="home" href="index.html">
+      <svg class="logo" viewBox="-11.5 -10.23 23 20.46" fill="none" aria-hidden="true">
+        <circle r="2" fill="#61dafb"></circle>
+        <g stroke="#61dafb" stroke-width="1">
+          <ellipse rx="11" ry="4.2"></ellipse>
+          <ellipse rx="11" ry="4.2" transform="rotate(60)"></ellipse>
+          <ellipse rx="11" ry="4.2" transform="rotate(120)"></ellipse>
+        </g>
+      </svg>
+    </a>
+    <span class="spacer"></span>
+    <span class="crumb">04 · useContext</span>
+  </header>
+
+  <main class="wrap" data-tabscope>
+    <section class="hero">
+      <span class="eyebrow">useContext</span>
+      <h1>Share without passing props</h1>
+      <p>Some data — the theme, the logged-in user, the language — is needed all over the app. Context lets deep components read it directly.</p>
+    </section>
+
+    <div class="card">
+      <h3>In plain words</h3>
+      <pre><code><span class="tok-com">// 1. create a context</span>
+<span class="tok-key">const</span> ThemeContext = <span class="tok-fn">createContext</span>(<span class="tok-str">"light"</span>);
+
+<span class="tok-com">// 2. provide a value high up</span>
+&lt;ThemeContext.Provider value={theme}&gt; … &lt;/ThemeContext.Provider&gt;
+
+<span class="tok-com">// 3. read it anywhere below, no props needed</span>
+<span class="tok-key">const</span> theme = <span class="tok-fn">useContext</span>(ThemeContext);</code></pre>
+      <div class="analogy">
+        <div class="emoji">📻</div>
+        <div class="txt">The Provider is a radio broadcast. Any component below can tune in with <code>useContext</code> — no need to hand the message down person by person.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Try it</h3>
+      <div class="tabs" data-tabs>
+        <button class="tab" data-tab="theme" aria-selected="true">Theme broadcast</button>
+        <button class="tab" data-tab="drill">Props vs context</button>
+      </div>
+
+      <!-- Scenario A: theme -->
+      <div class="panel active" data-panel="theme">
+        <div class="demo" id="demoA">
+          <h4>One switch, deep effect</h4>
+          <div class="row">
+            <button class="btn" id="a-toggle">Toggle theme</button>
+            <span class="pill" id="a-current">light</span>
+          </div>
+          <div class="row" style="margin-top:12px">
+            <div id="a-tree" style="width:100%"></div>
+          </div>
+        </div>
+        <p class="muted" style="font-size:14px">
+          The <code>&lt;Button&gt;</code> at the bottom reads the theme straight from context. The
+          <code>Page</code> and <code>Toolbar</code> in between don't know or care about it.
+        </p>
+        <pre><code><span class="tok-key">function</span> <span class="tok-fn">Button</span>() {
+  <span class="tok-key">const</span> theme = <span class="tok-fn">useContext</span>(ThemeContext); <span class="tok-com">// 👈 direct</span>
+  <span class="tok-key">return</span> &lt;button className={theme}&gt;I follow the theme&lt;/button&gt;;
+}</code></pre>
+      </div>
+
+      <!-- Scenario B: drilling -->
+      <div class="panel" data-panel="drill">
+        <div class="demo" id="demoB">
+          <h4>Watch how the value travels</h4>
+          <div class="row">
+            <button class="tab" data-mode="props" aria-selected="true">Prop drilling</button>
+            <button class="tab" data-mode="context" aria-selected="false">Context</button>
+          </div>
+          <div class="row" style="margin-top:12px">
+            <div id="b-tree" style="width:100%"></div>
+          </div>
+        </div>
+        <p class="muted" style="font-size:14px">
+          With <b>prop drilling</b>, every layer must accept and forward <code>user</code>, even ones that
+          don't use it. With <b>context</b>, the middle layers stay clean and only the consumer reads it.
+        </p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Good to remember</h3>
+      <ul class="clean">
+        <li><b>Great for "global-ish" data:</b> theme, current user, language, etc.</li>
+        <li><b>When the Provider's value changes, every consumer re-renders.</b> Don't shove fast-changing data through one giant context.</li>
+        <li><b>It's not a state manager by itself</b> — usually you pair it with <code>useState</code> or <code>useReducer</code> to hold the value.</li>
+      </ul>
+    </div>
+
+    <nav class="pager">
+      <a href="useref.html"><span class="dir">← Prev</span><span class="ttl">useRef</span></a>
+      <a class="next" href="usereducer.html"><span class="dir">Next →</span><span class="ttl">useReducer</span></a>
+    </nav>
+    <p class="footer"><a href="index.html">↑ All hooks</a></p>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    // tiny helper to draw a nested "component tree"
+    function nestBox(label, badge, inner, opts) {
+      opts = opts || {};
+      const dim = opts.dim ? "opacity:.55;" : "";
+      const bg = opts.bg || "var(--bg)";
+      const fg = opts.fg || "var(--text)";
+      const border = opts.border || "var(--line)";
+      return (
+        '<div style="border:1px solid ' + border + ';background:' + bg +
+        ';color:' + fg + ';border-radius:10px;padding:10px 10px 10px 12px;margin:0;' + dim + '">' +
+        '<div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:' +
+        (inner ? "8px" : "0") + '">' + label +
+        (badge ? ' <span style="color:var(--accent)">' + badge + '</span>' : '') + '</div>' +
+        (inner || '') + '</div>'
+      );
+    }
+
+    // ---------- Scenario A: theme broadcast ----------
+    (function () {
+      let theme = "light";
+      const treeEl = document.getElementById("a-tree");
+      const pill = document.getElementById("a-current");
+
+      function render() {
+        const isDark = theme === "dark";
+        const btn = nestBox("&lt;Button /&gt;", "useContext → " + theme, null, {
+          bg: isDark ? "#0b0e1a" : "#f4f6ff",
+          fg: isDark ? "#e9ecf5" : "#10121f",
+          border: "var(--brand)"
+        });
+        const toolbar = nestBox("&lt;Toolbar /&gt;", "(just passing through)", btn, { dim: true });
+        const page = nestBox("&lt;Page /&gt;", "(just passing through)", toolbar, { dim: true });
+        const app = nestBox("&lt;ThemeContext.Provider value=&quot;" + theme + "&quot;&gt;", "🔊", page,
+          { border: "var(--brand-2)" });
+        treeEl.innerHTML = app;
+        pill.textContent = theme;
+        pill.className = "pill " + (isDark ? "bad" : "good");
+        flash(document.getElementById("demoA"));
+      }
+
+      document.getElementById("a-toggle").onclick = () => {
+        theme = theme === "light" ? "dark" : "light";
+        render();
+      };
+      render();
+    })();
+
+    // ---------- Scenario B: props vs context ----------
+    (function () {
+      let mode = "props";
+      const treeEl = document.getElementById("b-tree");
+      const btns = document.querySelectorAll("[data-mode]");
+
+      function render() {
+        const consumer = nestBox("&lt;Avatar /&gt;", 'shows "Sam"', null, { border: "var(--brand)" });
+        let tree;
+        if (mode === "props") {
+          const layout = nestBox("&lt;Layout user={user} /&gt;", "❗ forwards user", consumer, { dim: true });
+          const page = nestBox("&lt;Page user={user} /&gt;", "❗ forwards user", layout, { dim: true });
+          tree = nestBox("&lt;App&gt; user = Sam", "passes user down", page, { border: "var(--brand-2)" });
+        } else {
+          const layout = nestBox("&lt;Layout /&gt;", "✓ clean", consumer, {});
+          const page = nestBox("&lt;Page /&gt;", "✓ clean", layout, {});
+          tree = nestBox("&lt;UserContext.Provider value=Sam&gt;", "🔊", page, { border: "var(--brand-2)" });
+        }
+        treeEl.innerHTML = tree;
+        flash(document.getElementById("demoB"));
+      }
+
+      btns.forEach((b) => {
+        b.onclick = () => {
+          mode = b.getAttribute("data-mode");
+          btns.forEach((x) => x.setAttribute("aria-selected", x === b ? "true" : "false"));
+          render();
+        };
+      });
+      render();
+    })();
+  </script>
+</body>
+</html>

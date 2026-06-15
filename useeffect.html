@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f1220" />
+  <title>useEffect — Learn React Hooks</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="home" href="index.html">
+      <svg class="logo" viewBox="-11.5 -10.23 23 20.46" fill="none" aria-hidden="true">
+        <circle r="2" fill="#61dafb"></circle>
+        <g stroke="#61dafb" stroke-width="1">
+          <ellipse rx="11" ry="4.2"></ellipse>
+          <ellipse rx="11" ry="4.2" transform="rotate(60)"></ellipse>
+          <ellipse rx="11" ry="4.2" transform="rotate(120)"></ellipse>
+        </g>
+      </svg>
+    </a>
+    <span class="spacer"></span>
+    <span class="crumb">02 · useEffect</span>
+  </header>
+
+  <main class="wrap" data-tabscope>
+    <section class="hero">
+      <span class="eyebrow">useEffect</span>
+      <h1>Run side-effects</h1>
+      <p>Use it for things that reach <i>outside</i> your component: fetching data, timers, subscriptions, updating the document title.</p>
+    </section>
+
+    <div class="card">
+      <h3>In plain words</h3>
+      <pre><code><span class="tok-fn">useEffect</span>(() =&gt; {
+  <span class="tok-com">// runs AFTER React paints the screen</span>
+  <span class="tok-key">return</span> () =&gt; {
+    <span class="tok-com">// optional cleanup, runs before the next effect / on unmount</span>
+  };
+}, [dependencies]);</code></pre>
+      <p>The <b>dependency array</b> is the key. It tells React <i>when</i> to run the effect again:</p>
+      <ul class="clean muted">
+        <li><b>No array</b> → runs after <i>every</i> render.</li>
+        <li><b><code>[]</code> empty</b> → runs <i>once</i>, when the component first appears.</li>
+        <li><b><code>[count]</code></b> → runs whenever <code>count</code> changes.</li>
+      </ul>
+      <div class="analogy">
+        <div class="emoji">🔔</div>
+        <div class="txt">It's a "when this changes, do that" rule. You list what to watch; React rings the bell only when one of those things actually changes.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Try it</h3>
+      <div class="tabs" data-tabs>
+        <button class="tab" data-tab="deps" aria-selected="true">The dependency array</button>
+        <button class="tab" data-tab="cleanup">Cleanup (a timer)</button>
+      </div>
+
+      <!-- Scenario A: dependency array -->
+      <div class="panel active" data-panel="deps">
+        <div class="demo" id="demoA">
+          <h4>Choose what the effect depends on</h4>
+          <div class="row">
+            <button class="tab" data-dep="none" aria-selected="false">no array</button>
+            <button class="tab" data-dep="empty" aria-selected="true">[ ]</button>
+            <button class="tab" data-dep="count" aria-selected="false">[count]</button>
+          </div>
+          <div class="row" style="margin-top:14px">
+            <span class="readout">count: <b id="a-count">0</b></span>
+            <button class="btn" id="a-inc">change count</button>
+          </div>
+          <div class="row">
+            <span class="readout">other: <b id="a-other">off</b></span>
+            <button class="btn secondary" id="a-toggle">change other state</button>
+          </div>
+          <div class="log" id="a-log"></div>
+        </div>
+        <p class="muted" style="font-size:14px">
+          Try each mode. With <code>[count]</code>, changing "other" re-renders but the effect <b>doesn't</b> run —
+          because <code>count</code> didn't change.
+        </p>
+        <pre><code><span class="tok-fn">useEffect</span>(() =&gt; {
+  <span class="tok-fn">console</span>.<span class="tok-fn">log</span>(<span class="tok-str">"effect ran, count is"</span>, count);
+}, [count]); <span class="tok-com">// 👈 try [], or remove the array</span></code></pre>
+      </div>
+
+      <!-- Scenario B: cleanup -->
+      <div class="panel" data-panel="cleanup">
+        <div class="demo" id="demoB">
+          <h4>A timer that cleans up after itself</h4>
+          <div class="row">
+            <span class="big-number" id="b-secs">0</span><span class="muted">seconds</span>
+          </div>
+          <div class="row">
+            <button class="btn" id="b-mount">Mount timer</button>
+            <button class="btn danger" id="b-unmount" disabled>Unmount timer</button>
+          </div>
+          <div class="row">
+            <span class="pill" id="b-status">not mounted</span>
+          </div>
+          <div class="log" id="b-log"></div>
+        </div>
+        <div class="note warn">
+          Without the cleanup <code>return</code>, the interval would keep running forever (a memory leak).
+          React calls your cleanup when the component goes away.
+        </div>
+        <pre><code><span class="tok-fn">useEffect</span>(() =&gt; {
+  <span class="tok-key">const</span> id = <span class="tok-fn">setInterval</span>(() =&gt; <span class="tok-fn">setSecs</span>(s =&gt; s + <span class="tok-num">1</span>), <span class="tok-num">1000</span>);
+  <span class="tok-key">return</span> () =&gt; <span class="tok-fn">clearInterval</span>(id); <span class="tok-com">// 👈 cleanup</span>
+}, []);</code></pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Good to remember</h3>
+      <ul class="clean">
+        <li><b>Effects run after the render is on screen</b>, not during it.</li>
+        <li><b>List every value the effect uses</b> in the dependency array. Leaving things out causes stale data bugs.</li>
+        <li><b>Return a cleanup function</b> for anything ongoing: timers, event listeners, subscriptions.</li>
+        <li><b>Don't put updating state inside an effect that depends on that state</b> without care — you can create an infinite loop.</li>
+      </ul>
+    </div>
+
+    <nav class="pager">
+      <a href="usestate.html"><span class="dir">← Prev</span><span class="ttl">useState</span></a>
+      <a class="next" href="useref.html"><span class="dir">Next →</span><span class="ttl">useRef</span></a>
+    </nav>
+    <p class="footer"><a href="index.html">↑ All hooks</a></p>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    // ---------- Scenario A: dependency array ----------
+    (function () {
+      const log = makeLogger(document.getElementById("a-log"));
+      let count = 0, other = false, depMode = "empty";
+      let mounted = false, lastEffectCount = null, renders = 0;
+
+      const depButtons = document.querySelectorAll("[data-dep]");
+      depButtons.forEach((b) => {
+        b.onclick = () => {
+          depMode = b.getAttribute("data-dep");
+          depButtons.forEach((x) =>
+            x.setAttribute("aria-selected", x === b ? "true" : "false"));
+          log.add('— switched deps to: ' +
+            (depMode === "none" ? "(no array)" :
+             depMode === "empty" ? "[]" : "[count]") +
+            " (resets the demo) —", "warn");
+          // simulate a fresh mount when you change the rule
+          mounted = false; lastEffectCount = null; renders = 0;
+          render(true);
+        };
+      });
+
+      function runEffectIfNeeded(isMount) {
+        let run = false, why = "";
+        if (depMode === "none") { run = true; why = "no array → every render"; }
+        else if (depMode === "empty") { run = isMount; why = isMount ? "[] → on mount" : "[] → skipped"; }
+        else { // [count]
+          run = isMount || count !== lastEffectCount;
+          why = run ? "[count] → count changed" : "[count] → count unchanged, skipped";
+        }
+        if (run) {
+          log.add("✓ effect ran (" + why + ") · count=" + count, "ok");
+          lastEffectCount = count;
+        } else {
+          log.add("· effect " + why, "");
+        }
+      }
+
+      function render(isMount) {
+        renders++;
+        document.getElementById("a-count").textContent = count;
+        document.getElementById("a-other").textContent = other ? "on" : "off";
+        log.add("render #" + renders + (isMount ? " (mount)" : ""), "warn");
+        runEffectIfNeeded(isMount);
+        if (isMount) mounted = true;
+      }
+
+      document.getElementById("a-inc").onclick = () => { count++; render(false); };
+      document.getElementById("a-toggle").onclick = () => { other = !other; render(false); };
+
+      render(true); // first mount
+    })();
+
+    // ---------- Scenario B: cleanup timer ----------
+    (function () {
+      const log = makeLogger(document.getElementById("b-log"));
+      const secsEl = document.getElementById("b-secs");
+      const status = document.getElementById("b-status");
+      const mountBtn = document.getElementById("b-mount");
+      const unmountBtn = document.getElementById("b-unmount");
+      let secs = 0, intervalId = null;
+
+      function mount() {
+        if (intervalId) return;
+        secs = 0; secsEl.textContent = secs;
+        log.add("effect ran → setInterval started", "ok");
+        intervalId = setInterval(() => {
+          secs++; secsEl.textContent = secs;
+        }, 1000);
+        status.textContent = "running…"; status.className = "pill good";
+        mountBtn.disabled = true; unmountBtn.disabled = false;
+      }
+
+      function unmount() {
+        if (!intervalId) return;
+        clearInterval(intervalId); intervalId = null;
+        log.add("cleanup ran → clearInterval (no leak)", "err");
+        status.textContent = "unmounted"; status.className = "pill bad";
+        mountBtn.disabled = false; unmountBtn.disabled = true;
+      }
+
+      mountBtn.onclick = mount;
+      unmountBtn.onclick = unmount;
+      log.add("tap Mount to start the effect", "warn");
+    })();
+  </script>
+</body>
+</html>

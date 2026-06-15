@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f1220" />
+  <title>Learn React Hooks — Interactive</title>
+  <meta name="description" content="Learn React hooks in plain language with small interactive demos. Mobile friendly." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="home" href="index.html">
+      <svg class="logo" viewBox="-11.5 -10.23 23 20.46" fill="none" aria-hidden="true">
+        <circle r="2" fill="#61dafb"></circle>
+        <g stroke="#61dafb" stroke-width="1">
+          <ellipse rx="11" ry="4.2"></ellipse>
+          <ellipse rx="11" ry="4.2" transform="rotate(60)"></ellipse>
+          <ellipse rx="11" ry="4.2" transform="rotate(120)"></ellipse>
+        </g>
+      </svg>
+      Learn React Hooks
+    </a>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <span class="eyebrow">interactive · mobile friendly</span>
+      <h1>React Hooks, made simple</h1>
+      <p>Plain-language explanations with small demos you can poke at. Tap a card to start. No setup, nothing to install.</p>
+    </section>
+
+    <div class="card">
+      <h3>What is a "hook", in one sentence?</h3>
+      <p class="muted" style="margin-bottom:6px">
+        A hook is a special function (its name starts with <code>use…</code>) that lets a component
+        <b>remember things</b> and <b>react to changes</b> between renders.
+      </p>
+      <div class="analogy">
+        <div class="emoji">🧠</div>
+        <div class="txt">
+          Think of a component as a function that runs again and again every time something changes.
+          On its own it forgets everything each run. Hooks give it a <b>memory</b> and a way to
+          <b>run side-effects</b> at the right moments.
+        </div>
+      </div>
+    </div>
+
+    <h2>Pick a hook</h2>
+    <nav class="grid">
+      <a class="tile" href="usestate.html">
+        <div class="hk">useState</div>
+        <div class="desc">Remember a value and re-render when it changes.</div>
+        <div class="n">01</div>
+      </a>
+      <a class="tile" href="useeffect.html">
+        <div class="hk">useEffect</div>
+        <div class="desc">Run side-effects after render (fetching, timers, subscriptions).</div>
+        <div class="n">02</div>
+      </a>
+      <a class="tile" href="useref.html">
+        <div class="hk">useRef</div>
+        <div class="desc">Keep a value or a DOM node without causing re-renders.</div>
+        <div class="n">03</div>
+      </a>
+      <a class="tile" href="usecontext.html">
+        <div class="hk">useContext</div>
+        <div class="desc">Share data deep down the tree without passing props.</div>
+        <div class="n">04</div>
+      </a>
+      <a class="tile" href="usereducer.html">
+        <div class="hk">useReducer</div>
+        <div class="desc">Manage more complex state with clear actions.</div>
+        <div class="n">05</div>
+      </a>
+      <a class="tile" href="usememo-callback.html">
+        <div class="hk">useMemo / useCallback</div>
+        <div class="desc">Skip expensive work and keep references stable.</div>
+        <div class="n">06</div>
+      </a>
+    </nav>
+
+    <div class="note tip" style="margin-top:22px">
+      <b>How to use these pages:</b> read the short explanation, then play with the demo.
+      Most pages have <b>tabs</b> to switch between scenarios so you can compare behaviours.
+      Watch the <b>render log</b> to see when React would re-run your component.
+    </div>
+
+    <p class="footer">Built for learning · plain HTML, CSS &amp; JS — works offline.</p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

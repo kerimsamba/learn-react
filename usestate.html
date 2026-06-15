@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f1220" />
+  <title>useState — Learn React Hooks</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="home" href="index.html">
+      <svg class="logo" viewBox="-11.5 -10.23 23 20.46" fill="none" aria-hidden="true">
+        <circle r="2" fill="#61dafb"></circle>
+        <g stroke="#61dafb" stroke-width="1">
+          <ellipse rx="11" ry="4.2"></ellipse>
+          <ellipse rx="11" ry="4.2" transform="rotate(60)"></ellipse>
+          <ellipse rx="11" ry="4.2" transform="rotate(120)"></ellipse>
+        </g>
+      </svg>
+    </a>
+    <span class="spacer"></span>
+    <span class="crumb">01 · useState</span>
+  </header>
+
+  <main class="wrap" data-tabscope>
+    <section class="hero">
+      <span class="eyebrow">useState</span>
+      <h1>Remember a value</h1>
+      <p>The most common hook. It gives your component a piece of memory and re-draws the screen whenever that memory changes.</p>
+    </section>
+
+    <div class="card">
+      <h3>In plain words</h3>
+      <p>You ask React for a value and a way to change it:</p>
+      <pre><code><span class="tok-key">const</span> [count, setCount] = <span class="tok-fn">useState</span>(<span class="tok-num">0</span>);</code></pre>
+      <ul class="clean muted">
+        <li><code>count</code> — the current value.</li>
+        <li><code>setCount</code> — call it to change the value. This also tells React to <b>re-render</b>.</li>
+        <li><code>0</code> — the starting value (only used the very first time).</li>
+      </ul>
+      <div class="analogy">
+        <div class="emoji">🔢</div>
+        <div class="txt">Like the score counter in a game: it holds a number, and updating it instantly refreshes the scoreboard on screen.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Try it</h3>
+      <div class="tabs" data-tabs>
+        <button class="tab" data-tab="basic" aria-selected="true">Basic counter</button>
+        <button class="tab" data-tab="stale">Stale vs functional update</button>
+      </div>
+
+      <!-- Scenario A -->
+      <div class="panel active" data-panel="basic">
+        <div class="demo" id="demoA">
+          <h4>Live component</h4>
+          <div class="row">
+            <span class="big-number" id="a-count">0</span>
+          </div>
+          <div class="row">
+            <button class="btn" id="a-inc">+1</button>
+            <button class="btn secondary" id="a-dec">−1</button>
+            <button class="btn ghost" id="a-reset">Reset</button>
+          </div>
+          <div class="row">
+            <input type="text" id="a-name" placeholder="Type your name…" />
+          </div>
+          <div class="row">
+            <span class="readout" id="a-greet">Hello, stranger 👋</span>
+          </div>
+          <div class="log" id="a-log"></div>
+        </div>
+        <p class="muted" style="font-size:14px">
+          Notice: <b>every</b> change to state re-renders the component (watch the log). React then updates only the parts of the screen that actually changed.
+        </p>
+        <pre><code><span class="tok-key">function</span> <span class="tok-fn">Counter</span>() {
+  <span class="tok-key">const</span> [count, setCount] = <span class="tok-fn">useState</span>(<span class="tok-num">0</span>);
+  <span class="tok-key">const</span> [name, setName]  = <span class="tok-fn">useState</span>(<span class="tok-str">""</span>);
+
+  <span class="tok-key">return</span> (
+    &lt;div&gt;
+      &lt;h1&gt;{count}&lt;/h1&gt;
+      &lt;button onClick={() =&gt; <span class="tok-fn">setCount</span>(count + <span class="tok-num">1</span>)}&gt;+1&lt;/button&gt;
+      &lt;input value={name} onChange={(e) =&gt; <span class="tok-fn">setName</span>(e.target.value)} /&gt;
+      &lt;p&gt;Hello, {name || <span class="tok-str">"stranger"</span>}&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+      </div>
+
+      <!-- Scenario B -->
+      <div class="panel" data-panel="stale">
+        <div class="demo" id="demoB">
+          <h4>Why "+3" sometimes only adds 1</h4>
+          <div class="row">
+            <span class="big-number" id="b-count">0</span>
+          </div>
+          <div class="row">
+            <button class="btn danger" id="b-wrong">+3 the wrong way</button>
+            <button class="btn" id="b-right">+3 the right way</button>
+            <button class="btn ghost" id="b-reset">Reset</button>
+          </div>
+          <div class="log" id="b-log"></div>
+        </div>
+        <div class="note warn">
+          <b>The wrong way</b> calls <code>setCount(count + 1)</code> three times in one click. All three see the
+          <i>same old</i> <code>count</code>, so they all set it to the same number → it only goes up by 1.
+        </div>
+        <div class="note tip">
+          <b>The right way</b> passes a function: <code>setCount(c =&gt; c + 1)</code>. React feeds each call the
+          latest value, so three calls really add 3. Use this form whenever the new value depends on the old one.
+        </div>
+        <pre><code><span class="tok-com">// ❌ all three read the same stale `count`</span>
+<span class="tok-fn">setCount</span>(count + <span class="tok-num">1</span>);
+<span class="tok-fn">setCount</span>(count + <span class="tok-num">1</span>);
+<span class="tok-fn">setCount</span>(count + <span class="tok-num">1</span>);
+
+<span class="tok-com">// ✅ each call gets the latest value</span>
+<span class="tok-fn">setCount</span>(c =&gt; c + <span class="tok-num">1</span>);
+<span class="tok-fn">setCount</span>(c =&gt; c + <span class="tok-num">1</span>);
+<span class="tok-fn">setCount</span>(c =&gt; c + <span class="tok-num">1</span>);</code></pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Good to remember</h3>
+      <ul class="clean">
+        <li><b>Don't change state directly.</b> Use the setter — <code>count++</code> won't re-render; <code>setCount(count + 1)</code> will.</li>
+        <li><b>State updates aren't instant.</b> The new value shows up on the <i>next</i> render, not the line after you call the setter.</li>
+        <li><b>For objects/arrays, make a copy.</b> e.g. <code>setUser({ ...user, name })</code> instead of mutating <code>user</code>.</li>
+        <li><b>Each call to the hook is independent.</b> A component can have as many <code>useState</code>s as it needs.</li>
+      </ul>
+    </div>
+
+    <nav class="pager">
+      <a class="disabled" href="#"><span class="dir">Prev</span><span class="ttl">—</span></a>
+      <a class="next" href="useeffect.html"><span class="dir">Next →</span><span class="ttl">useEffect</span></a>
+    </nav>
+    <p class="footer"><a href="index.html">↑ All hooks</a></p>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    // ---------- Scenario A: basic counter ----------
+    (function () {
+      const root = document.getElementById("demoA");
+      const log = makeLogger(document.getElementById("a-log"));
+      let count = 0, name = "", renders = 0;
+
+      function render() {
+        renders++;
+        document.getElementById("a-count").textContent = count;
+        const greet = document.getElementById("a-greet");
+        greet.textContent = "Hello, " + (name || "stranger") + " 👋";
+        flash(root);
+        log.add("render #" + renders + " → count=" + count +
+          ', name="' + name + '"', "ok");
+      }
+
+      document.getElementById("a-inc").onclick = () => { count++; render(); };
+      document.getElementById("a-dec").onclick = () => { count--; render(); };
+      document.getElementById("a-reset").onclick = () => {
+        count = 0; name = "";
+        document.getElementById("a-name").value = "";
+        render();
+      };
+      document.getElementById("a-name").oninput = (e) => {
+        name = e.target.value; render();
+      };
+
+      log.add("initial render → count=0", "warn");
+    })();
+
+    // ---------- Scenario B: stale vs functional ----------
+    (function () {
+      const root = document.getElementById("demoB");
+      const log = makeLogger(document.getElementById("b-log"));
+      let count = 0;
+
+      function paint() {
+        document.getElementById("b-count").textContent = count;
+        flash(root);
+      }
+
+      document.getElementById("b-wrong").onclick = () => {
+        const snapshot = count; // the value the click "captured"
+        // three calls, all using the same captured snapshot
+        let next = snapshot + 1;
+        next = snapshot + 1;
+        next = snapshot + 1;
+        count = next;
+        paint();
+        log.add("wrong: 3× setCount(count+1) with count=" + snapshot +
+          " → only +1 (now " + count + ")", "err");
+      };
+
+      document.getElementById("b-right").onclick = () => {
+        // functional updates chain off each other
+        count = count + 1;
+        count = count + 1;
+        count = count + 1;
+        paint();
+        log.add("right: 3× setCount(c=>c+1) → +3 (now " + count + ")", "ok");
+      };
+
+      document.getElementById("b-reset").onclick = () => {
+        count = 0; paint(); log.clear();
+        log.add("reset → 0", "warn");
+      };
+
+      log.add("tap a button to compare", "warn");
+    })();
+  </script>
+</body>
+</html>

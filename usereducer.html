@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f1220" />
+  <title>useReducer — Learn React Hooks</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="home" href="index.html">
+      <svg class="logo" viewBox="-11.5 -10.23 23 20.46" fill="none" aria-hidden="true">
+        <circle r="2" fill="#61dafb"></circle>
+        <g stroke="#61dafb" stroke-width="1">
+          <ellipse rx="11" ry="4.2"></ellipse>
+          <ellipse rx="11" ry="4.2" transform="rotate(60)"></ellipse>
+          <ellipse rx="11" ry="4.2" transform="rotate(120)"></ellipse>
+        </g>
+      </svg>
+    </a>
+    <span class="spacer"></span>
+    <span class="crumb">05 · useReducer</span>
+  </header>
+
+  <main class="wrap" data-tabscope>
+    <section class="hero">
+      <span class="eyebrow">useReducer</span>
+      <h1>State with clear actions</h1>
+      <p>When state gets complex or updates in many ways, <code>useReducer</code> keeps the logic in one tidy place. Think of it as <code>useState</code>'s organised sibling.</p>
+    </section>
+
+    <div class="card">
+      <h3>In plain words</h3>
+      <pre><code><span class="tok-key">const</span> [state, dispatch] = <span class="tok-fn">useReducer</span>(reducer, initialState);
+
+<span class="tok-com">// reducer = (currentState, action) => newState</span>
+<span class="tok-key">function</span> <span class="tok-fn">reducer</span>(state, action) {
+  <span class="tok-key">switch</span> (action.type) {
+    <span class="tok-key">case</span> <span class="tok-str">"increment"</span>: <span class="tok-key">return</span> { count: state.count + <span class="tok-num">1</span> };
+    <span class="tok-key">case</span> <span class="tok-str">"reset"</span>:     <span class="tok-key">return</span> { count: <span class="tok-num">0</span> };
+    <span class="tok-key">default</span>:          <span class="tok-key">return</span> state;
+  }
+}
+
+<span class="tok-fn">dispatch</span>({ type: <span class="tok-str">"increment"</span> }); <span class="tok-com">// 👈 send an action</span></code></pre>
+      <div class="analogy">
+        <div class="emoji">🏧</div>
+        <div class="txt">Like an ATM: you don't reach in and move the cash yourself. You send a request ("withdraw 20"), and one trusted machine decides the new balance.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Try it</h3>
+      <div class="tabs" data-tabs>
+        <button class="tab" data-tab="counter" aria-selected="true">Counter</button>
+        <button class="tab" data-tab="todo">Todo list</button>
+      </div>
+
+      <!-- Scenario A: counter -->
+      <div class="panel active" data-panel="counter">
+        <div class="demo" id="demoA">
+          <h4>Every button just dispatches an action</h4>
+          <div class="row"><span class="big-number" id="a-count">0</span></div>
+          <div class="row">
+            <button class="btn" data-action="increment">increment</button>
+            <button class="btn secondary" data-action="decrement">decrement</button>
+            <button class="btn ghost" data-action="reset">reset</button>
+          </div>
+          <div class="row">
+            <span class="muted" style="font-size:13px">step:</span>
+            <button class="btn ghost" data-action="setStep" data-step="1">1</button>
+            <button class="btn ghost" data-action="setStep" data-step="5">5</button>
+            <button class="btn ghost" data-action="setStep" data-step="10">10</button>
+            <span class="pill" id="a-step">step = 1</span>
+          </div>
+          <div class="log" id="a-log"></div>
+        </div>
+        <p class="muted" style="font-size:14px">
+          Watch the log: a <b>dispatch</b> goes in, the <b>reducer</b> computes the next state, the UI follows.
+          All the "how" lives in one function.
+        </p>
+      </div>
+
+      <!-- Scenario B: todo -->
+      <div class="panel" data-panel="todo">
+        <div class="demo" id="demoB">
+          <h4>A list managed by one reducer</h4>
+          <div class="row">
+            <input type="text" id="b-input" placeholder="New task…" />
+            <button class="btn" id="b-add">Add</button>
+          </div>
+          <div id="b-list" style="width:100%;margin-top:6px"></div>
+          <div class="log" id="b-log"></div>
+        </div>
+        <p class="muted" style="font-size:14px">
+          Add, tap to toggle done, or remove. Each is a small action — <code>add</code>, <code>toggle</code>,
+          <code>remove</code> — handled by the same reducer.
+        </p>
+        <pre><code><span class="tok-key">case</span> <span class="tok-str">"add"</span>:    <span class="tok-key">return</span> [...state, { id, text, done: <span class="tok-key">false</span> }];
+<span class="tok-key">case</span> <span class="tok-str">"toggle"</span>: <span class="tok-key">return</span> state.<span class="tok-fn">map</span>(t =&gt;
+                   t.id === action.id ? { ...t, done: !t.done } : t);
+<span class="tok-key">case</span> <span class="tok-str">"remove"</span>: <span class="tok-key">return</span> state.<span class="tok-fn">filter</span>(t =&gt; t.id !== action.id);</code></pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>useState or useReducer?</h3>
+      <ul class="clean">
+        <li><b>useState</b> for simple, independent values (a toggle, an input, one number).</li>
+        <li><b>useReducer</b> when updates are complex, related, or the next state depends on the old one in many ways.</li>
+        <li>The reducer must be <b>pure</b>: given the same state + action, always return the same new state, with no side-effects.</li>
+        <li>Always return a <b>new</b> object/array — never mutate the old state.</li>
+      </ul>
+    </div>
+
+    <nav class="pager">
+      <a href="usecontext.html"><span class="dir">← Prev</span><span class="ttl">useContext</span></a>
+      <a class="next" href="usememo-callback.html"><span class="dir">Next →</span><span class="ttl">useMemo / useCallback</span></a>
+    </nav>
+    <p class="footer"><a href="index.html">↑ All hooks</a></p>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    // ---------- Scenario A: counter reducer ----------
+    (function () {
+      const log = makeLogger(document.getElementById("a-log"));
+      let state = { count: 0, step: 1 };
+
+      // pure reducer
+      function reducer(s, action) {
+        switch (action.type) {
+          case "increment": return { ...s, count: s.count + s.step };
+          case "decrement": return { ...s, count: s.count - s.step };
+          case "reset":     return { ...s, count: 0 };
+          case "setStep":   return { ...s, step: action.step };
+          default:          return s;
+        }
+      }
+
+      function dispatch(action) {
+        const prev = JSON.stringify(state);
+        state = reducer(state, action);
+        document.getElementById("a-count").textContent = state.count;
+        document.getElementById("a-step").textContent = "step = " + state.step;
+        flash(document.getElementById("demoA"));
+        log.add("dispatch(" + JSON.stringify(action) + ")", "warn");
+        log.add("  " + prev + "  →  " + JSON.stringify(state), "ok");
+      }
+
+      document.querySelectorAll("#demoA [data-action]").forEach((btn) => {
+        btn.onclick = () => {
+          const type = btn.getAttribute("data-action");
+          const action = { type };
+          if (type === "setStep") action.step = Number(btn.getAttribute("data-step"));
+          dispatch(action);
+        };
+      });
+
+      log.add("initial state " + JSON.stringify(state), "warn");
+    })();
+
+    // ---------- Scenario B: todo reducer ----------
+    (function () {
+      const log = makeLogger(document.getElementById("b-log"));
+      const listEl = document.getElementById("b-list");
+      const input = document.getElementById("b-input");
+      let nextId = 1;
+      let todos = [];
+
+      function reducer(state, action) {
+        switch (action.type) {
+          case "add":
+            return [...state, { id: action.id, text: action.text, done: false }];
+          case "toggle":
+            return state.map((t) => t.id === action.id ? { ...t, done: !t.done } : t);
+          case "remove":
+            return state.filter((t) => t.id !== action.id);
+          default:
+            return state;
+        }
+      }
+
+      function dispatch(action) {
+        todos = reducer(todos, action);
+        render();
+        log.add("dispatch " + JSON.stringify(action), "warn");
+      }
+
+      function render() {
+        if (todos.length === 0) {
+          listEl.innerHTML = '<p class="muted" style="font-size:13px;margin:8px 0">No tasks yet.</p>';
+          return;
+        }
+        listEl.innerHTML = "";
+        todos.forEach((t) => {
+          const row = document.createElement("div");
+          row.className = "row";
+          row.style.cssText = "justify-content:space-between;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:6px 0";
+          const text = document.createElement("button");
+          text.className = "btn ghost";
+          text.style.cssText = "flex:1;text-align:left;min-height:36px;padding:6px 8px;" +
+            (t.done ? "text-decoration:line-through;opacity:.55" : "");
+          text.textContent = (t.done ? "✓ " : "○ ") + t.text;
+          text.onclick = () => dispatch({ type: "toggle", id: t.id });
+          const del = document.createElement("button");
+          del.className = "btn danger";
+          del.style.cssText = "min-height:36px;padding:6px 12px";
+          del.textContent = "✕";
+          del.onclick = () => dispatch({ type: "remove", id: t.id });
+          row.appendChild(text); row.appendChild(del);
+          listEl.appendChild(row);
+        });
+      }
+
+      function add() {
+        const text = input.value.trim();
+        if (!text) return;
+        dispatch({ type: "add", id: nextId++, text });
+        input.value = "";
+        input.focus();
+      }
+
+      document.getElementById("b-add").onclick = add;
+      input.addEventListener("keydown", (e) => { if (e.key === "Enter") add(); });
+
+      render();
+      log.add("add a task to begin", "warn");
+    })();
+  </script>
+</body>
+</html>

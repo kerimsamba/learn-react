@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f1220" />
+  <title>useRef — Learn React Hooks</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="home" href="index.html">
+      <svg class="logo" viewBox="-11.5 -10.23 23 20.46" fill="none" aria-hidden="true">
+        <circle r="2" fill="#61dafb"></circle>
+        <g stroke="#61dafb" stroke-width="1">
+          <ellipse rx="11" ry="4.2"></ellipse>
+          <ellipse rx="11" ry="4.2" transform="rotate(60)"></ellipse>
+          <ellipse rx="11" ry="4.2" transform="rotate(120)"></ellipse>
+        </g>
+      </svg>
+    </a>
+    <span class="spacer"></span>
+    <span class="crumb">03 · useRef</span>
+  </header>
+
+  <main class="wrap" data-tabscope>
+    <section class="hero">
+      <span class="eyebrow">useRef</span>
+      <h1>A box that survives renders</h1>
+      <p>Hold onto a value <i>without</i> triggering a re-render when it changes — or grab a real DOM element to control it directly.</p>
+    </section>
+
+    <div class="card">
+      <h3>In plain words</h3>
+      <pre><code><span class="tok-key">const</span> ref = <span class="tok-fn">useRef</span>(initialValue);
+ref.current <span class="tok-com">// 👈 read or write the value here</span></code></pre>
+      <ul class="clean muted">
+        <li>It's a plain box with one property: <code>.current</code>.</li>
+        <li>Changing <code>.current</code> does <b>not</b> re-render — unlike state.</li>
+        <li>The box stays the same across every render (it remembers).</li>
+      </ul>
+      <div class="analogy">
+        <div class="emoji">📌</div>
+        <div class="txt">Like a sticky note on your desk. You can scribble on it any time, it stays put between tasks, but updating it doesn't redraw the whole desk.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Try it</h3>
+      <div class="tabs" data-tabs>
+        <button class="tab" data-tab="dom" aria-selected="true">Grab a DOM element</button>
+        <button class="tab" data-tab="value">Value without re-render</button>
+      </div>
+
+      <!-- Scenario A: DOM ref -->
+      <div class="panel active" data-panel="dom">
+        <div class="demo" id="demoA">
+          <h4>Control an input directly</h4>
+          <div class="row">
+            <input type="text" id="a-input" placeholder="I can be focused by code…" />
+          </div>
+          <div class="row">
+            <button class="btn" id="a-focus">Focus the input</button>
+            <button class="btn secondary" id="a-clear">Clear it</button>
+          </div>
+          <div class="log" id="a-log"></div>
+        </div>
+        <p class="muted" style="font-size:14px">
+          A ref attached to an element lets you call browser methods like <code>.focus()</code> on it.
+        </p>
+        <pre><code><span class="tok-key">const</span> inputRef = <span class="tok-fn">useRef</span>(<span class="tok-key">null</span>);
+
+<span class="tok-key">return</span> (
+  &lt;&gt;
+    &lt;input ref={inputRef} /&gt;
+    &lt;button onClick={() =&gt; inputRef.current.<span class="tok-fn">focus</span>()}&gt;Focus&lt;/button&gt;
+  &lt;/&gt;
+);</code></pre>
+      </div>
+
+      <!-- Scenario B: value without re-render -->
+      <div class="panel" data-panel="value">
+        <div class="demo" id="demoB">
+          <h4>state re-renders · ref does not</h4>
+          <div class="row">
+            <span class="readout">state count: <b id="b-state">0</b></span>
+            <button class="btn" id="b-state-btn">+1 state</button>
+          </div>
+          <div class="row">
+            <span class="readout">ref count: <b id="b-ref">0</b></span>
+            <button class="btn secondary" id="b-ref-btn">+1 ref</button>
+          </div>
+          <div class="row">
+            <span class="readout">renders: <b id="b-renders">1</b></span>
+          </div>
+          <div class="log" id="b-log"></div>
+        </div>
+        <div class="note warn">
+          Tap <b>+1 ref</b> a few times — the displayed ref count seems stuck at 0, because nothing re-rendered.
+          Now tap <b>+1 state</b>: the screen redraws and the ref's true value suddenly appears. The value was
+          there all along; it just wasn't shown until a render happened.
+        </div>
+        <pre><code><span class="tok-key">const</span> [count, setCount] = <span class="tok-fn">useState</span>(<span class="tok-num">0</span>); <span class="tok-com">// re-renders</span>
+<span class="tok-key">const</span> clicks = <span class="tok-fn">useRef</span>(<span class="tok-num">0</span>);            <span class="tok-com">// silent</span>
+
+clicks.current++;        <span class="tok-com">// updates the box, screen unchanged</span>
+<span class="tok-fn">setCount</span>(count + <span class="tok-num">1</span>);    <span class="tok-com">// triggers a re-render → both now show</span></code></pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Good to remember</h3>
+      <ul class="clean">
+        <li><b>Need it on screen?</b> Use <code>useState</code>. <b>Just need to remember it?</b> <code>useRef</code> is lighter.</li>
+        <li>Common uses: focusing inputs, storing a timer/interval id, holding the "previous" value, counting things that don't affect the UI.</li>
+        <li><b>Don't read/write <code>.current</code> during rendering</b> — do it in event handlers or effects.</li>
+      </ul>
+    </div>
+
+    <nav class="pager">
+      <a href="useeffect.html"><span class="dir">← Prev</span><span class="ttl">useEffect</span></a>
+      <a class="next" href="usecontext.html"><span class="dir">Next →</span><span class="ttl">useContext</span></a>
+    </nav>
+    <p class="footer"><a href="index.html">↑ All hooks</a></p>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    // ---------- Scenario A: DOM ref ----------
+    (function () {
+      const log = makeLogger(document.getElementById("a-log"));
+      const input = document.getElementById("a-input");
+      document.getElementById("a-focus").onclick = () => {
+        input.focus();
+        log.add("inputRef.current.focus() called", "ok");
+      };
+      document.getElementById("a-clear").onclick = () => {
+        input.value = "";
+        input.focus();
+        log.add("inputRef.current.value = '' ", "ok");
+      };
+      log.add("the buttons reach into the real DOM node", "warn");
+    })();
+
+    // ---------- Scenario B: ref vs state ----------
+    (function () {
+      const log = makeLogger(document.getElementById("b-log"));
+      let stateCount = 0;        // simulates useState
+      let refCount = 0;          // simulates useRef .current
+      let renders = 1;
+
+      const stateEl = document.getElementById("b-state");
+      const refEl = document.getElementById("b-ref");
+      const rEl = document.getElementById("b-renders");
+
+      // a "render" reads the latest values onto the screen
+      function render() {
+        renders++;
+        stateEl.textContent = stateCount;
+        refEl.textContent = refCount;   // ref's true value becomes visible now
+        rEl.textContent = renders;
+        flash(document.getElementById("demoB"));
+      }
+
+      document.getElementById("b-state-btn").onclick = () => {
+        stateCount++;
+        log.add("setCount → re-render (ref shows true value: " + refCount + ")", "ok");
+        render();
+      };
+
+      document.getElementById("b-ref-btn").onclick = () => {
+        refCount++;               // changes silently, no render
+        log.add("ref.current = " + refCount + " (no re-render, screen unchanged)", "warn");
+      };
+
+      log.add("tap +1 ref a few times, then +1 state", "warn");
+    })();
+  </script>
+</body>
+</html>

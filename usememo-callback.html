@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f1220" />
+  <title>useMemo &amp; useCallback — Learn React Hooks</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="home" href="index.html">
+      <svg class="logo" viewBox="-11.5 -10.23 23 20.46" fill="none" aria-hidden="true">
+        <circle r="2" fill="#61dafb"></circle>
+        <g stroke="#61dafb" stroke-width="1">
+          <ellipse rx="11" ry="4.2"></ellipse>
+          <ellipse rx="11" ry="4.2" transform="rotate(60)"></ellipse>
+          <ellipse rx="11" ry="4.2" transform="rotate(120)"></ellipse>
+        </g>
+      </svg>
+    </a>
+    <span class="spacer"></span>
+    <span class="crumb">06 · useMemo / useCallback</span>
+  </header>
+
+  <main class="wrap" data-tabscope>
+    <section class="hero">
+      <span class="eyebrow">useMemo · useCallback</span>
+      <h1>Skip needless work</h1>
+      <p>Two performance helpers. <code>useMemo</code> remembers a <i>computed value</i>; <code>useCallback</code> remembers a <i>function</i> — so they aren't rebuilt on every render.</p>
+    </section>
+
+    <div class="card">
+      <h3>In plain words</h3>
+      <pre><code><span class="tok-com">// remember a value; recompute only when [a, b] change</span>
+<span class="tok-key">const</span> total = <span class="tok-fn">useMemo</span>(() =&gt; <span class="tok-fn">expensive</span>(a, b), [a, b]);
+
+<span class="tok-com">// remember a function; rebuild only when [a, b] change</span>
+<span class="tok-key">const</span> onClick = <span class="tok-fn">useCallback</span>(() =&gt; <span class="tok-fn">doThing</span>(a, b), [a, b]);</code></pre>
+      <div class="analogy">
+        <div class="emoji">🧮</div>
+        <div class="txt">Like writing a hard sum's answer on a sticky note. Next time you're asked, you read the note instead of doing the maths again — unless the numbers changed.</div>
+      </div>
+      <div class="note warn">
+        <b>Don't reach for these first.</b> Most components are fast enough without them. Add them only when you
+        measure a real slowdown, or when a value/function is fed to a memoized child.
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Try it</h3>
+      <div class="tabs" data-tabs>
+        <button class="tab" data-tab="memo" aria-selected="true">useMemo</button>
+        <button class="tab" data-tab="callback">useCallback</button>
+      </div>
+
+      <!-- Scenario A: useMemo -->
+      <div class="panel active" data-panel="memo">
+        <div class="demo" id="demoA">
+          <h4>An "expensive" calculation</h4>
+          <div class="row">
+            <button class="tab" data-memo="on" aria-selected="true">useMemo: on</button>
+            <button class="tab" data-memo="off" aria-selected="false">useMemo: off</button>
+          </div>
+          <div class="row" style="margin-top:12px">
+            <span class="readout">number: <b id="a-num">3</b></span>
+            <button class="btn" id="a-num-btn">change number</button>
+          </div>
+          <div class="row">
+            <span class="readout">theme clicks: <b id="a-other">0</b></span>
+            <button class="btn secondary" id="a-other-btn">unrelated re-render</button>
+          </div>
+          <div class="row">
+            <span class="readout">result: <b id="a-result">…</b></span>
+            <span class="pill bad">computations: <b id="a-calc">0</b></span>
+          </div>
+          <div class="log" id="a-log"></div>
+        </div>
+        <p class="muted" style="font-size:14px">
+          With memo <b>on</b>, the "unrelated re-render" button doesn't recompute (the count stays still).
+          Turn it <b>off</b> and every render redoes the work.
+        </p>
+        <pre><code><span class="tok-key">const</span> result = <span class="tok-fn">useMemo</span>(
+  () =&gt; <span class="tok-fn">slowCalculation</span>(number), <span class="tok-com">// only runs…</span>
+  [number]                       <span class="tok-com">// …when `number` changes</span>
+);</code></pre>
+      </div>
+
+      <!-- Scenario B: useCallback -->
+      <div class="panel" data-panel="callback">
+        <div class="demo" id="demoB">
+          <h4>A stable function for a memoized child</h4>
+          <div class="row">
+            <button class="tab" data-cb="on" aria-selected="true">useCallback: on</button>
+            <button class="tab" data-cb="off" aria-selected="false">useCallback: off</button>
+          </div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn" id="b-render">Re-render parent</button>
+          </div>
+          <div class="row">
+            <span class="readout">Parent renders: <b id="b-parent">1</b></span>
+          </div>
+          <div class="row">
+            <span class="readout">&lt;Child&gt; renders: <b id="b-child">1</b></span>
+            <span class="pill" id="b-status">child is stable</span>
+          </div>
+          <div class="log" id="b-log"></div>
+        </div>
+        <div class="note">
+          A child wrapped in <code>React.memo</code> skips re-rendering when its props are unchanged.
+          But a function created fresh each render is a <i>new</i> prop every time —
+          <code>useCallback</code> keeps the same function so the child can safely skip.
+        </div>
+        <pre><code><span class="tok-key">const</span> handleClick = <span class="tok-fn">useCallback</span>(() =&gt; { … }, []);
+<span class="tok-com">// Child is React.memo(...) → only re-renders if handleClick changes</span>
+&lt;Child onClick={handleClick} /&gt;</code></pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Good to remember</h3>
+      <ul class="clean">
+        <li><b><code>useMemo</code> returns a value; <code>useCallback</code> returns a function.</b> In fact <code>useCallback(fn, d)</code> is just <code>useMemo(() =&gt; fn, d)</code>.</li>
+        <li>They're a <b>cache</b>, not a guarantee — React may still recompute. Never rely on them for correctness, only speed.</li>
+        <li>Get the <b>dependency array</b> right, same as <code>useEffect</code>. Missing deps → stale results.</li>
+        <li>Premature use adds complexity for no gain. Measure first.</li>
+      </ul>
+    </div>
+
+    <nav class="pager">
+      <a href="usereducer.html"><span class="dir">← Prev</span><span class="ttl">useReducer</span></a>
+      <a class="next disabled" href="#"><span class="dir">Done 🎉</span><span class="ttl">—</span></a>
+    </nav>
+    <p class="footer"><a href="index.html">↑ All hooks</a></p>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    // ---------- Scenario A: useMemo ----------
+    (function () {
+      const log = makeLogger(document.getElementById("a-log"));
+      let num = 3, other = 0, memoOn = true;
+      let calcs = 0;
+      let cache = { num: null, result: null };
+
+      // pretend-expensive calculation
+      function slowCalculation(n) {
+        calcs++;
+        let total = 0;
+        for (let i = 1; i <= n; i++) total += i * i;
+        return total;
+      }
+
+      function getResult() {
+        if (memoOn && cache.num === num) {
+          log.add("useMemo: cached (number unchanged) → skipped work", "ok");
+          return cache.result;
+        }
+        const r = slowCalculation(num);
+        cache = { num, result: r };
+        log.add("computed slowCalculation(" + num + ") = " + r, "err");
+        return r;
+      }
+
+      function render(reason) {
+        log.add("render · " + reason, "warn");
+        const r = getResult();
+        document.getElementById("a-num").textContent = num;
+        document.getElementById("a-other").textContent = other;
+        document.getElementById("a-result").textContent = r;
+        document.getElementById("a-calc").textContent = calcs;
+        flash(document.getElementById("demoA"));
+      }
+
+      document.getElementById("a-num-btn").onclick = () => { num++; render("number changed"); };
+      document.getElementById("a-other-btn").onclick = () => { other++; render("unrelated state changed"); };
+
+      document.querySelectorAll("[data-memo]").forEach((b) => {
+        b.onclick = () => {
+          memoOn = b.getAttribute("data-memo") === "on";
+          document.querySelectorAll("[data-memo]").forEach((x) =>
+            x.setAttribute("aria-selected", x === b ? "true" : "false"));
+          cache = { num: null, result: null }; // reset cache on mode change
+          log.add("— useMemo " + (memoOn ? "ON" : "OFF") + " —", "warn");
+          render("mode changed");
+        };
+      });
+
+      render("initial mount");
+    })();
+
+    // ---------- Scenario B: useCallback ----------
+    (function () {
+      const log = makeLogger(document.getElementById("b-log"));
+      let cbOn = true;
+      let parentRenders = 1, childRenders = 1;
+      const stableFn = function handler() {}; // what useCallback "remembers"
+      let lastFn = stableFn;                  // identity passed to child last time
+
+      function render() {
+        parentRenders++;
+        // With useCallback ON the same function is reused; OFF makes a new one.
+        const newFn = cbOn ? stableFn : function handler() {};
+        const changed = newFn !== lastFn;
+        lastFn = newFn;
+
+        document.getElementById("b-parent").textContent = parentRenders;
+
+        // React.memo child re-renders only if its prop (the function) changed
+        if (changed) {
+          childRenders++;
+          log.add("parent re-rendered → new function → <Child> re-renders", "err");
+        } else {
+          log.add("parent re-rendered → same function → <Child> SKIPPED", "ok");
+        }
+        document.getElementById("b-child").textContent = childRenders;
+
+        const status = document.getElementById("b-status");
+        status.textContent = cbOn ? "child stays stable" : "child re-renders each time";
+        status.className = "pill " + (cbOn ? "good" : "bad");
+        flash(document.getElementById("demoB"));
+      }
+
+      document.getElementById("b-render").onclick = render;
+
+      document.querySelectorAll("[data-cb]").forEach((b) => {
+        b.onclick = () => {
+          cbOn = b.getAttribute("data-cb") === "on";
+          document.querySelectorAll("[data-cb]").forEach((x) =>
+            x.setAttribute("aria-selected", x === b ? "true" : "false"));
+          lastFn = cbOn ? stableFn : null; // reset baseline for the new mode
+          log.add("— useCallback " + (cbOn ? "ON" : "OFF") + " —", "warn");
+        };
+      });
+
+      log.add("tap 'Re-render parent' a few times in each mode", "warn");
+    })();
+  </script>
+</body>
+</html>
