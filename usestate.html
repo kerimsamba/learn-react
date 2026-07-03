@@ -1,217 +1,1356 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0f1220" />
-  <title>useState — Learn React Hooks</title>
-  <link rel="stylesheet" href="styles.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#0a0e1a">
+<title>useState Mastery — Learn React Hooks</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e1a;--bg2:#111627;--card:#181d30;--card2:#1e2540;
+  --line:#2a3155;--text:#e4e8f7;--muted:#8b93b8;
+  --brand:#61dafb;--brand-dim:rgba(97,218,251,.12);
+  --purple:#7c5cff;--green:#4ade80;--red:#f87171;--amber:#ffb454;
+  --radius:16px;--mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --ease:cubic-bezier(.4,0,.2,1);
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.55;min-height:100dvh;display:flex;flex-direction:column;overflow:hidden;-webkit-font-smoothing:antialiased}
+#app{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+
+/* ── Header ── */
+.topbar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:rgba(10,14,26,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);z-index:50;flex-shrink:0}
+.topbar .back{color:var(--brand);text-decoration:none;font-size:14px;font-weight:600;display:flex;align-items:center;gap:4px}
+.topbar .spacer{flex:1}
+.topbar .phase-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.progress-track{height:4px;background:var(--line);border-radius:2px;flex-shrink:0}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--purple));border-radius:2px;transition:width .4s var(--ease)}
+
+/* ── Screen container ── */
+.screen-wrap{flex:1;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+.screen{min-height:100%;padding:20px 16px calc(20px + var(--safe-b));display:flex;flex-direction:column;gap:16px;animation:fadeUp .35s var(--ease)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* ── Bottom nav ── */
+.bottombar{display:flex;gap:8px;padding:10px 16px calc(10px + var(--safe-b));background:rgba(10,14,26,.95);backdrop-filter:blur(12px);border-top:1px solid var(--line);flex-shrink:0;z-index:50}
+.bottombar .btn{flex:1}
+.bottombar .btn.primary{background:var(--brand);color:#06222c}
+.bottombar .btn.primary:disabled{background:var(--line);color:var(--muted)}
+
+/* ── Cards ── */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;transition:border-color .2s}
+.card-header{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:10px}
+.card-title{font-size:20px;font-weight:700;line-height:1.2;margin-bottom:8px}
+.card-text{color:var(--muted);font-size:15px;line-height:1.5}
+
+/* ── Buttons ── */
+.btn{appearance:none;border:1px solid var(--line);background:var(--card2);color:var(--text);font:inherit;font-size:15px;font-weight:600;padding:12px 18px;border-radius:12px;cursor:pointer;min-height:48px;transition:all .15s var(--ease);display:inline-flex;align-items:center;justify-content:center;gap:8px;-webkit-tap-highlight-color:transparent;user-select:none}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn.sm{min-height:40px;padding:8px 14px;font-size:14px;border-radius:10px}
+.btn.primary{background:var(--brand);color:#06222c;border-color:var(--brand);font-weight:700}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--brand)}
+.btn.danger{background:rgba(248,113,113,.15);border-color:rgba(248,113,113,.3);color:var(--red)}
+.btn.success{background:rgba(74,222,128,.15);border-color:rgba(74,222,128,.3);color:var(--green)}
+.btn.selected{background:var(--brand);color:#06222c;border-color:var(--brand)}
+
+/* ── Concept Map ── */
+.concept-map{position:relative;min-height:320px;margin:8px 0}
+.map-node{position:absolute;background:var(--card2);border:2px solid var(--line);border-radius:14px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;transition:all .25s var(--ease);text-align:center;z-index:2;-webkit-tap-highlight-color:transparent}
+.map-node:active{transform:scale(.95)}
+.map-node.active{border-color:var(--brand);background:var(--brand-dim);box-shadow:0 0 20px rgba(97,218,251,.2)}
+.map-node .icon{font-size:22px;display:block;margin-bottom:4px}
+.map-node .label{font-family:var(--mono);font-size:12px;color:var(--brand)}
+.map-line{position:absolute;z-index:1}
+.map-desc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:14px;color:var(--muted);animation:fadeUp .25s var(--ease);margin-top:8px}
+
+/* ── Code ── */
+pre{background:#080b14;border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.55;margin:0}
+code{font-family:var(--mono)}
+.hl-kw{color:#c792ea}.hl-fn{color:var(--brand)}.hl-str{color:#c3e88d}.hl-num{color:var(--amber)}.hl-cm{color:#5a6180;font-style:italic}.hl-err{color:var(--red);text-decoration:wavy underline var(--red)}
+
+/* ── Drag/Drop ── */
+.drag-zone{display:flex;flex-direction:column;gap:8px}
+.drag-item{background:var(--card2);border:2px solid var(--line);border-radius:12px;padding:12px 16px;font-size:15px;cursor:grab;touch-action:none;user-select:none;transition:all .15s var(--ease);display:flex;align-items:center;gap:10px}
+.drag-item:active{cursor:grabbing}
+.drag-item .handle{color:var(--muted);font-size:18px;flex-shrink:0}
+.drag-item.dragging{opacity:.5;border-color:var(--brand)}
+.drag-item.over{border-color:var(--brand);background:var(--brand-dim)}
+.drag-item.correct{border-color:var(--green);background:rgba(74,222,128,.08)}
+.drag-item.wrong{border-color:var(--red);background:rgba(248,113,113,.08)}
+.drop-slot{min-height:48px;border:2px dashed var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;transition:all .15s var(--ease)}
+.drop-slot.over{border-color:var(--brand);background:var(--brand-dim)}
+.drop-slot.filled{border-style:solid;border-color:var(--brand);background:var(--brand-dim)}
+
+/* ── Match ── */
+.match-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.match-item{background:var(--card2);border:2px solid var(--line);border-radius:12px;padding:12px;font-size:14px;cursor:pointer;transition:all .15s var(--ease);text-align:center;min-height:48px;display:flex;align-items:center;justify-content:center}
+.match-item.selected{border-color:var(--brand);background:var(--brand-dim)}
+.match-item.correct{border-color:var(--green);background:rgba(74,222,128,.1)}
+.match-item.wrong{border-color:var(--red);background:rgba(248,113,113,.1)}
+.match-item.matched{opacity:.5;pointer-events:none}
+
+/* ── Code Fill ── */
+.code-fill{position:relative}
+.code-fill input{font-family:var(--mono);font-size:13px;background:rgba(97,218,251,.1);border:1px dashed var(--brand);color:var(--brand);padding:2px 8px;border-radius:6px;width:auto;min-width:80px;outline:none}
+.code-fill input:focus{border-style:solid;box-shadow:0 0 0 2px rgba(97,218,251,.2)}
+.code-fill input.correct{border-color:var(--green);color:var(--green);background:rgba(74,222,128,.1)}
+.code-fill input.wrong{border-color:var(--red);color:var(--red);background:rgba(248,113,113,.1)}
+
+/* ── Spot Bug ── */
+.code-lines{list-style:none;font-family:var(--mono);font-size:13px;line-height:1.6}
+.code-line{padding:4px 12px;cursor:pointer;border-radius:8px;transition:all .12s;border:2px solid transparent;display:flex;gap:8px}
+.code-line:hover,.code-line:active{background:rgba(255,255,255,.04)}
+.code-line .ln{color:var(--muted);min-width:20px;text-align:right;user-select:none}
+.code-line.selected{border-color:var(--amber);background:rgba(255,180,84,.08)}
+.code-line.correct-line{border-color:var(--green);background:rgba(74,222,128,.08)}
+.code-line.wrong-line{border-color:var(--red);background:rgba(248,113,113,.08)}
+
+/* ── Inputs ── */
+textarea{font:inherit;font-size:15px;padding:14px;border-radius:12px;border:1px solid var(--line);background:var(--bg2);color:var(--text);min-height:100px;width:100%;resize:vertical;line-height:1.5}
+textarea:focus{outline:2px solid var(--brand);outline-offset:1px}
+input[type="text"]{font:inherit;font-size:16px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg2);color:var(--text);min-height:48px;width:100%}
+input[type="text"]:focus{outline:2px solid var(--brand);outline-offset:1px}
+
+/* ── Feedback ── */
+.feedback{border-radius:12px;padding:14px 16px;font-size:14px;line-height:1.5;animation:fadeUp .25s var(--ease)}
+.feedback.good{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);color:var(--green)}
+.feedback.bad{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:var(--red)}
+.feedback.info{background:rgba(97,218,251,.08);border:1px solid rgba(97,218,251,.2);color:var(--brand)}
+.feedback .why{color:var(--text);margin-top:6px;font-size:13px}
+
+/* ── Confidence ── */
+.confidence-row{display:flex;gap:6px;flex-wrap:wrap}
+.conf-btn{flex:1;min-width:0}
+
+/* ── Dashboard ── */
+.dash-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:flex;justify-content:flex-end;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.dash-panel{width:min(380px,90vw);background:var(--bg2);border-left:1px solid var(--line);padding:20px;overflow-y:auto;animation:slideLeft .3s var(--ease)}
+@keyframes slideLeft{from{transform:translateX(100%)}to{transform:none}}
+.dash-section{margin-bottom:20px}
+.dash-title{font-size:18px;font-weight:700;margin-bottom:14px}
+.dash-stat{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.dash-stat .label{color:var(--muted);font-size:14px}
+.dash-stat .value{font-family:var(--mono);font-weight:700;font-size:15px}
+.meter{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:6px}
+.meter-fill{height:100%;border-radius:4px;transition:width .5s var(--ease)}
+.meter-fill.brand{background:var(--brand)}
+.meter-fill.green{background:var(--green)}
+.meter-fill.amber{background:var(--amber)}
+.meter-fill.red{background:var(--red)}
+.weak-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.weak-item{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+
+/* ── Pill / Tag ── */
+.pill{font-family:var(--mono);font-size:12px;padding:3px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:4px}
+.pill.brand{background:var(--brand-dim);color:var(--brand);border:1px solid rgba(97,218,251,.25)}
+.pill.green{background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.25)}
+.pill.amber{background:rgba(255,180,84,.1);color:var(--amber);border:1px solid rgba(255,180,84,.25)}
+.pill.red{background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.25)}
+.pill.purple{background:rgba(124,92,255,.1);color:var(--purple);border:1px solid rgba(124,92,255,.25)}
+
+/* ── Choice grid ── */
+.choices{display:flex;flex-direction:column;gap:8px}
+.choice{background:var(--card2);border:2px solid var(--line);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .15s var(--ease);font-size:15px;text-align:left;-webkit-tap-highlight-color:transparent}
+.choice:active{transform:scale(.98)}
+.choice.selected{border-color:var(--brand);background:var(--brand-dim)}
+.choice.correct{border-color:var(--green);background:rgba(74,222,128,.1)}
+.choice.wrong{border-color:var(--red);background:rgba(248,113,113,.1)}
+.choice code{font-size:13px;background:rgba(255,255,255,.06);padding:1px 6px;border-radius:4px}
+
+/* ── Scenario box ── */
+.scenario{background:linear-gradient(135deg,var(--card) 0%,var(--card2) 100%);border:1px solid var(--line);border-radius:var(--radius);padding:18px;position:relative;overflow:hidden}
+.scenario::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--purple),var(--brand))}
+.scenario-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--purple);margin-bottom:8px}
+.scenario-text{font-size:15px;line-height:1.55}
+
+/* ── Key concepts ── */
+.key-concepts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.kc{font-size:12px;padding:4px 10px;border-radius:8px;border:1px solid var(--line);color:var(--muted);transition:all .2s}
+.kc.found{border-color:var(--green);color:var(--green);background:rgba(74,222,128,.08)}
+.kc.missing{border-color:var(--amber);color:var(--amber);background:rgba(255,180,84,.08)}
+
+/* ── Misc ── */
+.divider{height:1px;background:var(--line);margin:4px 0}
+.gap-sm{gap:8px}.gap-md{gap:12px}.gap-lg{gap:16px}
+.flex-col{display:flex;flex-direction:column}
+.flex-row{display:flex;align-items:center}
+.flex-wrap{flex-wrap:wrap}
+.text-center{text-align:center}
+.text-sm{font-size:13px}.text-xs{font-size:11px}
+.mt-xs{margin-top:4px}.mt-sm{margin-top:8px}.mt-md{margin-top:12px}
+.w-full{width:100%}
+.mono{font-family:var(--mono)}
+.brand{color:var(--brand)}.green{color:var(--green)}.red{color:var(--red)}.amber{color:var(--amber)}.purple{color:var(--purple)}
+.kbd{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 6px;background:var(--card2);border:1px solid var(--line);border-radius:6px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+
+@media(min-width:600px){
+  .screen{padding:28px 24px 40px;max-width:640px;margin:0 auto}
+  .match-grid{gap:14px}
+}
+@media(min-width:900px){
+  .screen{max-width:720px}
+}
+</style>
 </head>
 <body>
-  <header class="topbar">
-    <a class="home" href="index.html">
-      <svg class="logo" viewBox="-11.5 -10.23 23 20.46" fill="none" aria-hidden="true">
-        <circle r="2" fill="#61dafb"></circle>
-        <g stroke="#61dafb" stroke-width="1">
-          <ellipse rx="11" ry="4.2"></ellipse>
-          <ellipse rx="11" ry="4.2" transform="rotate(60)"></ellipse>
-          <ellipse rx="11" ry="4.2" transform="rotate(120)"></ellipse>
-        </g>
-      </svg>
-    </a>
-    <span class="spacer"></span>
-    <span class="crumb">01 · useState</span>
-  </header>
+<div id="app"></div>
+<script>
+(function(){
+"use strict";
 
-  <main class="wrap" data-tabscope>
-    <section class="hero">
-      <span class="eyebrow">useState</span>
-      <h1>Remember a value</h1>
-      <p>The most common hook. It gives your component a piece of memory and re-draws the screen whenever that memory changes.</p>
-    </section>
+/* ═══════════════════════════════════════════
+   CONTENT DATA — useState mastery screens
+   ═══════════════════════════════════════════ */
 
-    <div class="card">
-      <h3>In plain words</h3>
-      <p>You ask React for a value and a way to change it:</p>
-      <pre><code><span class="tok-key">const</span> [count, setCount] = <span class="tok-fn">useState</span>(<span class="tok-num">0</span>);</code></pre>
-      <ul class="clean muted">
-        <li><code>count</code> — the current value.</li>
-        <li><code>setCount</code> — call it to change the value. This also tells React to <b>re-render</b>.</li>
-        <li><code>0</code> — the starting value (only used the very first time).</li>
-      </ul>
-      <div class="analogy">
-        <div class="emoji">🔢</div>
-        <div class="txt">Like the score counter in a game: it holds a number, and updating it instantly refreshes the scoreboard on screen.</div>
-      </div>
+const PHASES = [
+  {id:"map",name:"Mental Map",icon:"\u{1F5FA}"},
+  {id:"predict",name:"Predict",icon:"\u{1F914}"},
+  {id:"learn",name:"Learn",icon:"\u{1F4A1}"},
+  {id:"build",name:"Build",icon:"\u{1F6E0}"},
+  {id:"recall",name:"Recall",icon:"\u{1F9E0}"},
+  {id:"edge",name:"Edge Cases",icon:"\u{26A0}"},
+  {id:"teach",name:"Teach",icon:"\u{1F4AC}"},
+  {id:"real",name:"Real World",icon:"\u{1F30D}"},
+  {id:"challenge",name:"Challenge",icon:"\u{1F525}"},
+  {id:"mastery",name:"Mastery",icon:"\u{1F3C6}"}
+];
+
+const STEPS = [
+
+// ── Phase 0: MENTAL MAP ──
+{
+  id:"map1", phase:0, type:"map",
+  title:"The State Cycle",
+  subtitle:"Tap each node to understand how state flows through a React component.",
+  nodes:[
+    {id:"component",x:50,y:8,icon:"\u{1F4E6}",label:"Component",desc:"A function that returns UI. Runs again on every render."},
+    {id:"state",x:15,y:40,icon:"\u{1F4BE}",label:"State",desc:"A value React remembers between renders. Created with useState."},
+    {id:"setter",x:85,y:40,icon:"\u{1F504}",label:"Setter",desc:"A function that updates state. Calling it tells React to re-render."},
+    {id:"render",x:50,y:70,icon:"\u{1F3A8}",label:"Re-render",desc:"React runs your component function again with the new state value."},
+    {id:"ui",x:50,y:95,icon:"\u{1F4F1}",label:"Updated UI",desc:"The screen reflects the new state. The cycle is complete."}
+  ],
+  edges:[["component","state"],["component","setter"],["setter","render"],["render","component"],["component","ui"]]
+},
+
+// ── Phase 1: PREDICT ──
+{
+  id:"pred1", phase:1, type:"predict",
+  question:"A function runs, does its work, and returns. Then it runs again. What happens to the local variables from the first run?",
+  choices:[
+    {text:"They're still there from last time",correct:false},
+    {text:"They're gone — recreated fresh each run",correct:true},
+    {text:"They persist if declared with const",correct:false}
+  ],
+  reveal:"Every call creates a brand-new scope. Local variables are born, used, and discarded each time the function runs. This is why React components need a special mechanism to *remember* values between renders — that mechanism is state.",
+  why_others:[
+    "Local variables don't survive between separate function calls.",
+    "const prevents reassignment within one call, but the variable is still new each invocation."
+  ]
+},
+{
+  id:"pred2", phase:1, type:"predict",
+  question:"If a React component is just a function that runs repeatedly, how do you think it knows to update the screen?",
+  choices:[
+    {text:"It watches variables for changes automatically",correct:false},
+    {text:"You call a special update function that schedules a re-render",correct:true},
+    {text:"It re-renders on a timer",correct:false}
+  ],
+  reveal:"React doesn't watch your variables. You explicitly call a setter function (like setCount). This tells React: \"the data changed — please run my component again and update the screen.\"",
+  why_others:[
+    "JavaScript has no built-in variable watching. React can't detect count++ on its own.",
+    "React only re-renders when something tells it to — not on a schedule."
+  ]
+},
+
+// ── Phase 2: LEARN (tiny chunks) ──
+{
+  id:"chunk1", phase:2, type:"info",
+  title:"useState gives you memory",
+  visual:"code",
+  code:'<span class="hl-kw">const</span> [count, setCount] = <span class="hl-fn">useState</span>(<span class="hl-num">0</span>);',
+  points:[
+    "<b>count</b> — the current value (starts at 0)",
+    "<b>setCount</b> — call this to change the value",
+    "<b>0</b> — the initial value (only used on the very first render)"
+  ],
+  key_idea:"useState returns a pair: the value and its updater. The value persists across re-renders."
+},
+{
+  id:"chunk2", phase:2, type:"info",
+  title:"The setter triggers a re-render",
+  visual:"flow",
+  flow_steps:["User taps button","Event handler calls setCount(1)","React schedules a re-render","Component function runs again","count is now 1","Screen updates"],
+  key_idea:"Calling the setter doesn't change the value immediately — it tells React to re-run your component with the new value."
+},
+{
+  id:"chunk3", phase:2, type:"info",
+  title:"Each state is independent",
+  visual:"code",
+  code:'<span class="hl-kw">const</span> [name, setName] = <span class="hl-fn">useState</span>(<span class="hl-str">""</span>);\n<span class="hl-kw">const</span> [age, setAge]   = <span class="hl-fn">useState</span>(<span class="hl-num">0</span>);\n<span class="hl-kw">const</span> [on, setOn]     = <span class="hl-fn">useState</span>(<span class="hl-kw">false</span>);',
+  points:[
+    "A component can have as many useState calls as it needs.",
+    "Each one is completely independent.",
+    "Updating name won't affect age or on."
+  ],
+  key_idea:"Multiple states don't interfere — each useState call manages its own isolated value."
+},
+
+// ── Phase 3: BUILD (active construction) ──
+{
+  id:"build1", phase:3, type:"order",
+  title:"Put the state update in order",
+  instruction:"Drag these steps into the correct sequence. What happens when a user clicks a button that calls setCount(count + 1)?",
+  items:[
+    {id:"a",text:"User clicks the button"},
+    {id:"b",text:"Event handler calls setCount(count + 1)"},
+    {id:"c",text:"React schedules a re-render"},
+    {id:"d",text:"Component function runs again"},
+    {id:"e",text:"useState returns the new value"},
+    {id:"f",text:"JSX is recalculated and screen updates"}
+  ],
+  correct_order:["a","b","c","d","e","f"],
+  feedback:"This is the React state update lifecycle. The key insight: the component *re-runs from the top* with the new state value. It's not that a variable changes in place — it's a whole new function call."
+},
+{
+  id:"build2", phase:3, type:"fill",
+  title:"Complete the useState call",
+  instruction:"Fill in the blanks to create state for a username (starting as an empty string).",
+  template:'<span class="hl-kw">const</span> [____1____, ____2____] = <span class="hl-fn">____3____</span>(____4____);',
+  blanks:[
+    {id:"1",answer:"username",hint:"the state variable name",accept:["username","name","user"]},
+    {id:"2",answer:"setUsername",hint:"the setter function",accept:["setUsername","setName","setUser"]},
+    {id:"3",answer:"useState",hint:"the hook name",accept:["useState"]},
+    {id:"4",answer:'""',hint:"the initial value",accept:['""',"''","``",""]}
+  ],
+  feedback:"The convention is [thing, setThing]. The setter always starts with 'set'. The initial value should match the type you expect."
+},
+{
+  id:"build3", phase:3, type:"match",
+  title:"Match the concept",
+  instruction:"Connect each term to its meaning.",
+  left:[
+    {id:"a",text:"useState(0)"},
+    {id:"b",text:"count"},
+    {id:"c",text:"setCount"},
+    {id:"d",text:"Re-render"}
+  ],
+  right:[
+    {id:"w",text:"The current value"},
+    {id:"x",text:"Creates state with initial value 0"},
+    {id:"y",text:"Updates state and triggers re-render"},
+    {id:"z",text:"React runs the component again"}
+  ],
+  pairs:[["a","x"],["b","w"],["c","y"],["d","z"]],
+  feedback:"These four concepts form the core of useState. The hook creates state, the variable reads it, the setter writes it, and re-rendering makes the change visible."
+},
+
+// ── Phase 4: RECALL ──
+{
+  id:"recall1", phase:4, type:"recall",
+  question:"Without looking back: what TWO things does useState return?",
+  key_concepts:["current value","setter function"],
+  accept_patterns:["value","current","state","setter","set","function","update","updater"],
+  feedback:"useState returns an array with exactly two elements: [currentValue, setterFunction]. You destructure them into your own names."
+},
+{
+  id:"recall2", phase:4, type:"predict",
+  question:"You call setCount(5) on line 10. On line 11, what is count?",
+  choices:[
+    {text:"5 — it updates immediately",correct:false},
+    {text:"Still the old value — the new value shows up next render",correct:true},
+    {text:"undefined — the variable is invalidated",correct:false}
+  ],
+  reveal:"State updates are not instant. When you call setCount(5), React says \"OK, next time I render, count will be 5.\" For the rest of this current render, count is still the old value. This surprises almost every beginner.",
+  why_others:[
+    "The setter *schedules* an update, it doesn't mutate the variable in place.",
+    "The variable is still valid — it just holds the pre-update value."
+  ]
+},
+
+// ── Phase 5: EDGE CASES ──
+{
+  id:"edge1", phase:5, type:"spot",
+  title:"Find the bug",
+  instruction:"This component isn't updating. Tap the line with the problem.",
+  lines:[
+    {num:1,code:'function Counter() {',bug:false},
+    {num:2,code:'  const [count, setCount] = useState(0);',bug:false},
+    {num:3,code:'',bug:false},
+    {num:4,code:'  function handleClick() {',bug:false},
+    {num:5,code:'    count = count + 1;  // update the count',bug:true},
+    {num:6,code:'  }',bug:false},
+    {num:7,code:'',bug:false},
+    {num:8,code:'  return <button onClick={handleClick}>{count}</button>;',bug:false},
+    {num:9,code:'}',bug:false}
+  ],
+  explanation:"Line 5 directly mutates count, but React doesn't know about it. You MUST use setCount(count + 1) to trigger a re-render. Assigning to count does nothing visible — React still holds the old value.",
+  misconception:"Many beginners expect count++ or count = x to work because that's how regular variables behave. But state is special — only the setter tells React something changed."
+},
+{
+  id:"edge2", phase:5, type:"spot",
+  title:"Why does +3 only add 1?",
+  instruction:"This code is supposed to add 3, but it only adds 1. Tap the line(s) causing the issue.",
+  lines:[
+    {num:1,code:'function handleClick() {',bug:false},
+    {num:2,code:'  setCount(count + 1);',bug:true},
+    {num:3,code:'  setCount(count + 1);',bug:true},
+    {num:4,code:'  setCount(count + 1);',bug:true},
+    {num:5,code:'}',bug:false}
+  ],
+  explanation:"All three calls see the SAME old count value (closures!). If count is 0, all three compute 0 + 1 = 1. The fix: use functional updates: setCount(c => c + 1). Each call gets the latest pending value.",
+  misconception:"It looks like 3 sequential additions. But React batches these, and each reads the same stale snapshot. The functional form (c => c + 1) chains off the previous pending update instead.",
+  fix_code:'<span class="hl-fn">setCount</span>(c =&gt; c + <span class="hl-num">1</span>);  <span class="hl-cm">// ×3 — each gets the latest</span>'
+},
+{
+  id:"edge3", phase:5, type:"predict",
+  question:"You have state: const [user, setUser] = useState({name: 'Jo', age: 25}). You call setUser({age: 26}). What happens to name?",
+  choices:[
+    {text:"name stays 'Jo' — React merges the objects",correct:false},
+    {text:"name is gone — the entire state is replaced",correct:true},
+    {text:"An error is thrown",correct:false}
+  ],
+  reveal:"Unlike class component this.setState, useState does NOT merge. You replace the whole value. To keep name, spread: setUser({...user, age: 26}). Forgetting the spread is one of the most common React bugs.",
+  why_others:[
+    "useState replaces, never merges. Class components merged — hooks don't.",
+    "No error, but your data silently loses the name field."
+  ]
+},
+
+// ── Phase 6: TEACH ──
+{
+  id:"teach1", phase:6, type:"explain",
+  prompt:"A junior developer asks: \"Why can't I just use a regular variable instead of useState?\" Write your explanation below.",
+  key_concepts:["re-render","memory between renders","function re-runs","screen update","React doesn't know"],
+  min_words:15,
+  model_answer:"A regular variable is created fresh every time the component function runs. When React re-renders, it calls your function again — any regular variable goes back to its initial value. useState tells React to remember the value between renders AND to re-render when it changes. Without useState, React has no idea your data changed, so the screen never updates."
+},
+
+// ── Phase 7: REAL WORLD ──
+{
+  id:"real1", phase:7, type:"scenario",
+  label:"Production Bug",
+  situation:"You're debugging a form. Users report that after typing in the email field and clicking Submit, the email value sent to the API is always empty. Here's the component:",
+  code:'function SignupForm() {\n  let email = "";\n\n  function handleSubmit() {\n    fetch("/api/signup", {\n      method: "POST",\n      body: JSON.stringify({ email })\n    });\n  }\n\n  return (\n    <form onSubmit={handleSubmit}>\n      <input onChange={e => email = e.target.value} />\n      <button type="submit">Sign up</button>\n    </form>\n  );\n}',
+  question:"What's wrong and how do you fix it?",
+  choices:[
+    {text:'email is a regular variable — each render resets it to "". Use useState instead.',correct:true},
+    {text:"The fetch call is missing headers.",correct:false},
+    {text:"onChange should use onInput instead.",correct:false}
+  ],
+  reveal:"The email variable is local. Any re-render (even from a parent) resets it to \"\". The fix: const [email, setEmail] = useState(\"\") and onChange={e => setEmail(e.target.value)}. This is the #1 rookie mistake in React.",
+  why_others:[
+    "Headers matter but won't cause an empty email — the data itself is the problem.",
+    "onChange and onInput behave similarly for text inputs in React."
+  ]
+},
+{
+  id:"real2", phase:7, type:"scenario",
+  label:"Architecture Decision",
+  situation:"You're building a product filter page. The user can set: search text, category, price range, sort order, and page number. A colleague suggests putting all of these in a single useState({...}) object.",
+  question:"What do you think of this approach?",
+  choices:[
+    {text:"It works, but separate useState per filter is cleaner and avoids accidental overwrites",correct:true},
+    {text:"A single object is ideal — fewer hook calls means better performance",correct:false},
+    {text:"Neither — you should use useRef for filters",correct:false}
+  ],
+  reveal:"Separate useState calls are usually better because: (1) you can update one without spreading the others, (2) less risk of accidentally dropping a field, (3) React optimizes them the same way. A single object makes sense when values always change together. When they become truly complex (many interdependent actions), useReducer is the better choice.",
+  why_others:[
+    "Number of hook calls has no meaningful performance impact. Simplicity > premature optimization.",
+    "useRef doesn't trigger re-renders — filter changes need to update the displayed results."
+  ]
+},
+
+// ── Phase 8: CHALLENGE ──
+{
+  id:"chal1", phase:8, type:"predict", difficulty:4,
+  question:"You see this in a code review:\n\nconst [items, setItems] = useState([]);\nfunction addItem(item) {\n  items.push(item);\n  setItems(items);\n}\n\nWill this work?",
+  choices:[
+    {text:"Yes, it pushes and updates",correct:false},
+    {text:"No — React sees the same array reference and skips the re-render",correct:true},
+    {text:"It works but is slow",correct:false}
+  ],
+  reveal:"items.push(item) mutates the existing array. Then setItems(items) passes the SAME reference. React compares old and new with Object.is() — same reference means \"nothing changed\" — so it skips the re-render entirely. Fix: setItems([...items, item]) or setItems(prev => [...prev, item]).",
+  why_others:[
+    "The push modifies the old array in place. React's comparison fails because the reference hasn't changed.",
+    "It's not a speed issue — it simply won't update the screen at all."
+  ]
+},
+{
+  id:"chal2", phase:8, type:"fill", difficulty:5,
+  title:"Design the state",
+  instruction:"A toggle that tracks how many times it's been switched. Fill in the state declarations.",
+  template:'<span class="hl-kw">function</span> <span class="hl-fn">SmartToggle</span>() {\n  <span class="hl-kw">const</span> [____1____, ____2____] = <span class="hl-fn">useState</span>(____3____);\n  <span class="hl-kw">const</span> [____4____, ____5____] = <span class="hl-fn">useState</span>(____6____);\n\n  <span class="hl-kw">function</span> <span class="hl-fn">toggle</span>() {\n    ____2____(prev =&gt; !prev);\n    ____5____(c =&gt; c + <span class="hl-num">1</span>);\n  }\n}',
+  blanks:[
+    {id:"1",answer:"isOn",hint:"boolean state name",accept:["isOn","on","active","toggled","isActive","enabled"]},
+    {id:"2",answer:"setIsOn",hint:"boolean setter",accept:["setIsOn","setOn","setActive","setToggled","setIsActive","setEnabled"]},
+    {id:"3",answer:"false",hint:"initial boolean",accept:["false","true"]},
+    {id:"4",answer:"count",hint:"counter name",accept:["count","toggleCount","switches","times","clicks"]},
+    {id:"5",answer:"setCount",hint:"counter setter",accept:["setCount","setToggleCount","setSwitches","setTimes","setClicks"]},
+    {id:"6",answer:"0",hint:"initial count",accept:["0"]}
+  ],
+  feedback:"Two independent useState calls: one boolean for the toggle, one number for the count. The functional updater (prev => !prev) ensures we always flip the current value, not a stale one."
+},
+
+// ── Phase 9: MASTERY ──
+{
+  id:"interleave1", phase:8, type:"predict",
+  question:"(Interleaved review) Going back to the mental map: what triggers React to re-run your component function?",
+  choices:[
+    {text:"A timer inside React",correct:false},
+    {text:"Calling a state setter (or parent re-rendering)",correct:true},
+    {text:"Any variable assignment",correct:false}
+  ],
+  reveal:"Re-renders happen when: (1) you call a state setter, (2) a parent component re-renders, or (3) context changes. React never polls or watches — it only acts when told to.",
+  why_others:[
+    "React is event-driven, not timer-driven.",
+    "Plain variable assignment is invisible to React."
+  ]
+},
+{
+  id:"mastery1", phase:9, type:"dashboard"
+}
+];
+
+/* ═══════════════════════════════════════════
+   LEARNING ENGINE
+   ═══════════════════════════════════════════ */
+
+const APP = {
+  step: 0,
+  scores: {},
+  confidence: {},
+  attempts: {},
+  times: {},
+  startTime: Date.now(),
+  stepStart: Date.now(),
+  showDashboard: false,
+  gateOpen: {},
+  mapVisited: {}
+};
+
+function save(){
+  try{
+    localStorage.setItem("useState_mastery",JSON.stringify({
+      step:APP.step,scores:APP.scores,confidence:APP.confidence,
+      attempts:APP.attempts,times:APP.times,gateOpen:APP.gateOpen
+    }));
+  }catch(e){}
+}
+function load(){
+  try{
+    const d=JSON.parse(localStorage.getItem("useState_mastery"));
+    if(d){Object.assign(APP,d);APP.stepStart=Date.now();}
+  }catch(e){}
+}
+load();
+
+function totalSteps(){return STEPS.length}
+function pct(){return Math.round((APP.step/(totalSteps()-1))*100)}
+function phaseOf(i){return STEPS[i]?PHASES[STEPS[i].phase]:PHASES[0]}
+function isGated(i){
+  const s=STEPS[i];
+  if(!s)return false;
+  return["predict","order","fill","match","spot","recall","explain","scenario"].includes(s.type);
+}
+
+function accuracy(){
+  const ids=Object.keys(APP.scores);
+  if(!ids.length)return 0;
+  return Math.round(ids.reduce((s,k)=>s+APP.scores[k],0)/ids.length*100);
+}
+
+function weakAreas(){
+  const weak=[];
+  Object.keys(APP.scores).forEach(k=>{
+    if(APP.scores[k]<1){
+      const st=STEPS.find(s=>s.id===k);
+      if(st)weak.push({id:k,title:st.title||st.question?.slice(0,40)+"...",score:APP.scores[k]});
+    }
+  });
+  return weak;
+}
+
+/* ═══════════════════════════════════════════
+   RENDERERS
+   ═══════════════════════════════════════════ */
+
+function render(){
+  APP.stepStart=Date.now();
+  const app=document.getElementById("app");
+  const step=STEPS[APP.step];
+  const ph=phaseOf(APP.step);
+
+  app.innerHTML=`
+    <div class="topbar">
+      <a class="back" href="index.html">←</a>
+      <span class="spacer"></span>
+      <span class="pill brand">${ph.icon} ${ph.name}</span>
+      <span class="spacer"></span>
+      <button class="btn sm ghost" onclick="toggleDash()">\u{1F4CA}</button>
     </div>
+    <div class="progress-track"><div class="progress-fill" style="width:${pct()}%"></div></div>
+    <div class="screen-wrap" id="sw"><div class="screen" id="scr"></div></div>
+    <div class="bottombar">
+      <button class="btn sm" onclick="prev()" ${APP.step===0?"disabled":""}>Back</button>
+      <span class="text-xs" style="color:var(--muted);text-align:center;flex:1">${APP.step+1} / ${totalSteps()}</span>
+      <button class="btn sm primary" id="next-btn" onclick="next()" ${canAdvance()?"":isGated(APP.step)?"disabled":""}>
+        ${APP.step>=totalSteps()-1?"Finish":"Next"}
+      </button>
+    </div>`;
 
-    <div class="card">
-      <h3>Try it</h3>
-      <div class="tabs" data-tabs>
-        <button class="tab" data-tab="basic" aria-selected="true">Basic counter</button>
-        <button class="tab" data-tab="stale">Stale vs functional update</button>
+  const scr=document.getElementById("scr");
+  const R=RENDERERS[step.type];
+  if(R)R(scr,step);
+  else scr.innerHTML=`<div class="card"><div class="card-title">Unknown step type: ${step.type}</div></div>`;
+
+  if(APP.showDashboard)showDashOverlay();
+  save();
+}
+
+function canAdvance(){
+  const s=STEPS[APP.step];
+  return !isGated(APP.step)||APP.gateOpen[s.id];
+}
+
+function unlock(){
+  APP.gateOpen[STEPS[APP.step].id]=true;
+  const nb=document.getElementById("next-btn");
+  if(nb)nb.disabled=false;
+}
+
+function prev(){if(APP.step>0){APP.step--;render();}}
+function next(){if(APP.step<totalSteps()-1&&canAdvance()){APP.step++;render();}}
+
+window.prev=prev;window.next=next;
+
+document.addEventListener("keydown",e=>{
+  if(e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA")return;
+  if(e.key==="ArrowRight"||e.key==="n")next();
+  if(e.key==="ArrowLeft"||e.key==="p")prev();
+  if(e.key==="d")toggleDash();
+});
+
+/* ── Dashboard overlay ── */
+function toggleDash(){
+  APP.showDashboard=!APP.showDashboard;
+  if(APP.showDashboard)showDashOverlay();
+  else{const o=document.querySelector(".dash-overlay");if(o)o.remove();}
+}
+window.toggleDash=toggleDash;
+
+function showDashOverlay(){
+  let o=document.querySelector(".dash-overlay");
+  if(o)o.remove();
+  const elapsed=Math.round((Date.now()-APP.startTime)/1000);
+  const mins=Math.floor(elapsed/60);
+  const secs=elapsed%60;
+  const acc=accuracy();
+  const weak=weakAreas();
+  const completed=Object.keys(APP.scores).length;
+  const total=STEPS.filter(s=>isGated(STEPS.indexOf(s))).length;
+
+  o=document.createElement("div");
+  o.className="dash-overlay";
+  o.onclick=e=>{if(e.target===o)toggleDash();};
+  o.innerHTML=`
+    <div class="dash-panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="dash-title">\u{1F4CA} Mastery Dashboard</div>
+        <button class="btn sm ghost" onclick="toggleDash()">✕</button>
       </div>
 
-      <!-- Scenario A -->
-      <div class="panel active" data-panel="basic">
-        <div class="demo" id="demoA">
-          <h4>Live component</h4>
-          <div class="row">
-            <span class="big-number" id="a-count">0</span>
-          </div>
-          <div class="row">
-            <button class="btn" id="a-inc">+1</button>
-            <button class="btn secondary" id="a-dec">−1</button>
-            <button class="btn ghost" id="a-reset">Reset</button>
-          </div>
-          <div class="row">
-            <input type="text" id="a-name" placeholder="Type your name…" />
-          </div>
-          <div class="row">
-            <span class="readout" id="a-greet">Hello, stranger 👋</span>
-          </div>
-          <div class="log" id="a-log"></div>
-        </div>
-        <p class="muted" style="font-size:14px">
-          Notice: <b>every</b> change to state re-renders the component (watch the log). React then updates only the parts of the screen that actually changed.
-        </p>
-        <pre><code><span class="tok-key">function</span> <span class="tok-fn">Counter</span>() {
-  <span class="tok-key">const</span> [count, setCount] = <span class="tok-fn">useState</span>(<span class="tok-num">0</span>);
-  <span class="tok-key">const</span> [name, setName]  = <span class="tok-fn">useState</span>(<span class="tok-str">""</span>);
-
-  <span class="tok-key">return</span> (
-    &lt;div&gt;
-      &lt;h1&gt;{count}&lt;/h1&gt;
-      &lt;button onClick={() =&gt; <span class="tok-fn">setCount</span>(count + <span class="tok-num">1</span>)}&gt;+1&lt;/button&gt;
-      &lt;input value={name} onChange={(e) =&gt; <span class="tok-fn">setName</span>(e.target.value)} /&gt;
-      &lt;p&gt;Hello, {name || <span class="tok-str">"stranger"</span>}&lt;/p&gt;
-    &lt;/div&gt;
-  );
-}</code></pre>
+      <div class="dash-section">
+        <div class="dash-stat"><span class="label">Progress</span><span class="value">${pct()}%</span></div>
+        <div class="meter"><div class="meter-fill brand" style="width:${pct()}%"></div></div>
       </div>
 
-      <!-- Scenario B -->
-      <div class="panel" data-panel="stale">
-        <div class="demo" id="demoB">
-          <h4>Why "+3" sometimes only adds 1</h4>
-          <div class="row">
-            <span class="big-number" id="b-count">0</span>
-          </div>
-          <div class="row">
-            <button class="btn danger" id="b-wrong">+3 the wrong way</button>
-            <button class="btn" id="b-right">+3 the right way</button>
-            <button class="btn ghost" id="b-reset">Reset</button>
-          </div>
-          <div class="log" id="b-log"></div>
-        </div>
-        <div class="note warn">
-          <b>The wrong way</b> calls <code>setCount(count + 1)</code> three times in one click. All three see the
-          <i>same old</i> <code>count</code>, so they all set it to the same number → it only goes up by 1.
-        </div>
-        <div class="note tip">
-          <b>The right way</b> passes a function: <code>setCount(c =&gt; c + 1)</code>. React feeds each call the
-          latest value, so three calls really add 3. Use this form whenever the new value depends on the old one.
-        </div>
-        <pre><code><span class="tok-com">// ❌ all three read the same stale `count`</span>
-<span class="tok-fn">setCount</span>(count + <span class="tok-num">1</span>);
-<span class="tok-fn">setCount</span>(count + <span class="tok-num">1</span>);
-<span class="tok-fn">setCount</span>(count + <span class="tok-num">1</span>);
-
-<span class="tok-com">// ✅ each call gets the latest value</span>
-<span class="tok-fn">setCount</span>(c =&gt; c + <span class="tok-num">1</span>);
-<span class="tok-fn">setCount</span>(c =&gt; c + <span class="tok-num">1</span>);
-<span class="tok-fn">setCount</span>(c =&gt; c + <span class="tok-num">1</span>);</code></pre>
+      <div class="dash-section">
+        <div class="dash-stat"><span class="label">Accuracy</span><span class="value ${acc>=80?"green":acc>=50?"amber":"red"}">${acc}%</span></div>
+        <div class="meter"><div class="meter-fill ${acc>=80?"green":acc>=50?"amber":"red"}" style="width:${acc}%"></div></div>
       </div>
-    </div>
 
-    <div class="card">
-      <h3>Good to remember</h3>
-      <ul class="clean">
-        <li><b>Don't change state directly.</b> Use the setter — <code>count++</code> won't re-render; <code>setCount(count + 1)</code> will.</li>
-        <li><b>State updates aren't instant.</b> The new value shows up on the <i>next</i> render, not the line after you call the setter.</li>
-        <li><b>For objects/arrays, make a copy.</b> e.g. <code>setUser({ ...user, name })</code> instead of mutating <code>user</code>.</li>
-        <li><b>Each call to the hook is independent.</b> A component can have as many <code>useState</code>s as it needs.</li>
-      </ul>
-    </div>
+      <div class="dash-section">
+        <div class="dash-stat"><span class="label">Questions answered</span><span class="value">${completed} / ${total}</span></div>
+        <div class="dash-stat"><span class="label">Time spent</span><span class="value">${mins}m ${secs}s</span></div>
+        <div class="dash-stat"><span class="label">Current phase</span><span class="value">${phaseOf(APP.step).name}</span></div>
+      </div>
 
-    <nav class="pager">
-      <a class="disabled" href="#"><span class="dir">Prev</span><span class="ttl">—</span></a>
-      <a class="next" href="useeffect.html"><span class="dir">Next →</span><span class="ttl">useEffect</span></a>
-    </nav>
-    <p class="footer"><a href="index.html">↑ All hooks</a></p>
-  </main>
+      ${weak.length?`
+      <div class="dash-section">
+        <div style="font-size:14px;font-weight:600;color:var(--amber);margin-bottom:8px">⚠ Needs reinforcement</div>
+        <ul class="weak-list">
+          ${weak.map(w=>`<li class="weak-item"><span>${w.title}</span><span class="pill red">${Math.round(w.score*100)}%</span></li>`).join("")}
+        </ul>
+      </div>`:""}
 
-  <script src="app.js"></script>
-  <script>
-    // ---------- Scenario A: basic counter ----------
-    (function () {
-      const root = document.getElementById("demoA");
-      const log = makeLogger(document.getElementById("a-log"));
-      let count = 0, name = "", renders = 0;
+      <div class="dash-section">
+        <div style="font-size:14px;font-weight:600;margin-bottom:8px">Phase progress</div>
+        ${PHASES.slice(0,-1).map((ph,i)=>{
+          const stepsInPhase=STEPS.filter(s=>s.phase===i);
+          const doneInPhase=stepsInPhase.filter(s=>APP.gateOpen[s.id]||!isGated(STEPS.indexOf(s))).length;
+          const phPct=stepsInPhase.length?Math.round(doneInPhase/stepsInPhase.length*100):0;
+          return`<div class="dash-stat"><span class="label">${ph.icon} ${ph.name}</span><span class="value">${phPct}%</span></div>`;
+        }).join("")}
+      </div>
 
-      function render() {
-        renders++;
-        document.getElementById("a-count").textContent = count;
-        const greet = document.getElementById("a-greet");
-        greet.textContent = "Hello, " + (name || "stranger") + " 👋";
-        flash(root);
-        log.add("render #" + renders + " → count=" + count +
-          ', name="' + name + '"', "ok");
+      <button class="btn w-full" onclick="resetProgress()" style="margin-top:8px">\u{1F504} Reset progress</button>
+    </div>`;
+  document.getElementById("app").appendChild(o);
+}
+
+function resetProgress(){
+  if(confirm("Reset all progress?")){
+    APP.step=0;APP.scores={};APP.confidence={};APP.attempts={};APP.times={};APP.gateOpen={};APP.mapVisited={};
+    APP.showDashboard=false;
+    localStorage.removeItem("useState_mastery");
+    render();
+  }
+}
+window.resetProgress=resetProgress;
+
+/* ═══════════════════════════════════════════
+   SCREEN TYPE RENDERERS
+   ═══════════════════════════════════════════ */
+
+const RENDERERS={
+
+/* ── Concept Map ── */
+map(el,step){
+  let html=`<div class="card-header">${step.subtitle}</div>
+    <div class="card-title">${step.title}</div>
+    <div class="concept-map" id="cmap">`;
+  step.nodes.forEach(n=>{
+    const visited=APP.mapVisited[n.id];
+    html+=`<div class="map-node ${visited?"active":""}" style="left:${n.x}%;top:${n.y}%;transform:translate(-50%,-50%)" data-node="${n.id}">
+      <span class="icon">${n.icon}</span>
+      <span class="label">${n.label}</span>
+    </div>`;
+  });
+  html+=`</div><div id="map-desc"></div>`;
+  const allVisited=step.nodes.every(n=>APP.mapVisited[n.id]);
+  if(!allVisited)html+=`<div class="pill amber mt-sm">Tap all ${step.nodes.length} nodes to continue</div>`;
+  el.innerHTML=html;
+
+  const cmap=document.getElementById("cmap");
+  drawMapLines(cmap,step);
+
+  cmap.querySelectorAll(".map-node").forEach(nd=>{
+    nd.onclick=()=>{
+      const nid=nd.dataset.node;
+      APP.mapVisited[nid]=true;
+      nd.classList.add("active");
+      const info=step.nodes.find(n=>n.id===nid);
+      document.getElementById("map-desc").innerHTML=`<div class="map-desc"><b>${info.label}:</b> ${info.desc}</div>`;
+      if(step.nodes.every(n=>APP.mapVisited[n.id]))unlock();
+      save();
+    };
+  });
+  if(allVisited)unlock();
+},
+
+/* ── Prediction / Multiple Choice ── */
+predict(el,step){
+  let answered=APP.scores[step.id]!==undefined;
+  let html=`<div class="card-header">${step.difficulty>=4?"\u{1F525} Challenge":"Predict"}</div>
+    <div class="card-title" style="font-size:16px;line-height:1.5;font-weight:500;white-space:pre-line">${esc(step.question)}</div>`;
+  if(step.code)html+=`<pre style="margin:12px 0"><code>${step.code}</code></pre>`;
+  html+=`<div class="choices" id="choices">`;
+  step.choices.forEach((c,i)=>{
+    const cls=answered?(c.correct?"correct":(APP.attempts[step.id]===i?"wrong":"")):"";
+    html+=`<div class="choice ${cls}" data-i="${i}" ${answered?"":""}>${c.text}</div>`;
+  });
+  html+=`</div><div id="fb"></div>`;
+  el.innerHTML=html;
+
+  if(answered){
+    showPredictFeedback(step);
+    return;
+  }
+
+  document.querySelectorAll("#choices .choice").forEach(ch=>{
+    ch.onclick=()=>{
+      const i=parseInt(ch.dataset.i);
+      const correct=step.choices[i].correct;
+      APP.scores[step.id]=correct?1:0;
+      APP.attempts[step.id]=i;
+      APP.times[step.id]=Date.now()-APP.stepStart;
+
+      document.querySelectorAll("#choices .choice").forEach((c,j)=>{
+        c.classList.add(step.choices[j].correct?"correct":(j===i?"wrong":""));
+        c.onclick=null;
+      });
+      showPredictFeedback(step);
+      unlock();
+      save();
+    };
+  });
+},
+
+/* ── Info (tiny chunk) ── */
+info(el,step){
+  let html=`<div class="card-header">Learn</div><div class="card-title">${step.title}</div>`;
+  if(step.visual==="code"&&step.code){
+    html+=`<pre style="margin:10px 0"><code>${step.code}</code></pre>`;
+  }
+  if(step.visual==="flow"&&step.flow_steps){
+    html+=`<div class="flex-col gap-sm" style="margin:12px 0">`;
+    step.flow_steps.forEach((s,i)=>{
+      html+=`<div class="flex-row gap-sm" style="animation:fadeUp .3s var(--ease) ${i*0.06}s both">
+        <span class="pill brand" style="min-width:28px;justify-content:center">${i+1}</span>
+        <span style="font-size:14px">${s}</span>
+      </div>`;
+      if(i<step.flow_steps.length-1)html+=`<div style="margin-left:13px;width:2px;height:8px;background:var(--line)"></div>`;
+    });
+    html+=`</div>`;
+  }
+  if(step.points){
+    html+=`<div class="flex-col gap-sm" style="margin:10px 0">`;
+    step.points.forEach(p=>{html+=`<div style="font-size:14px;color:var(--muted);padding-left:12px;border-left:2px solid var(--line)">${p}</div>`;});
+    html+=`</div>`;
+  }
+  if(step.key_idea){
+    html+=`<div class="feedback info mt-md"><b>Key idea:</b> ${step.key_idea}</div>`;
+  }
+  el.innerHTML=html;
+},
+
+/* ── Drag to Order ── */
+order(el,step){
+  const answered=APP.scores[step.id]!==undefined;
+  let order=answered?step.correct_order.slice():shuffle(step.items.map(i=>i.id));
+
+  let html=`<div class="card-header">Build</div><div class="card-title">${step.title}</div>
+    <div class="card-text">${step.instruction}</div>
+    <div class="drag-zone" id="dzone"></div>
+    ${!answered?'<button class="btn primary w-full mt-md" id="check-order">Check order</button>':''}
+    <div id="fb"></div>`;
+  el.innerHTML=html;
+
+  renderOrder(step,order,answered);
+
+  if(!answered){
+    initDragOrder(step,order);
+    document.getElementById("check-order").onclick=()=>{
+      const correct=order.every((id,i)=>id===step.correct_order[i]);
+      APP.scores[step.id]=correct?1:0;
+      APP.times[step.id]=Date.now()-APP.stepStart;
+      renderOrder(step,order,true);
+      document.getElementById("check-order").remove();
+      document.getElementById("fb").innerHTML=`
+        <div class="feedback ${correct?"good":"bad"} mt-md">
+          <b>${correct?"Correct!":"Not quite right."}</b>
+          <div class="why">${step.feedback}</div>
+        </div>`;
+      unlock();save();
+    };
+  }else{
+    document.getElementById("fb").innerHTML=`<div class="feedback ${APP.scores[step.id]?"good":"info"} mt-md"><div class="why">${step.feedback}</div></div>`;
+  }
+},
+
+/* ── Code Fill ── */
+fill(el,step){
+  const answered=APP.scores[step.id]!==undefined;
+  let tpl=step.template;
+  step.blanks.forEach(b=>{
+    const val=answered?(b.answer):"";
+    const cls=answered?"correct":"";
+    tpl=tpl.replace(`____${b.id}____`,`<input type="text" class="code-fill-input ${cls}" data-blank="${b.id}" placeholder="${b.hint}" value="${esc(val)}" style="width:${Math.max(b.answer.length*9,70)}px" ${answered?"readonly":""}>`);
+  });
+  let html=`<div class="card-header">${step.difficulty>=4?"\u{1F525} Challenge":"Build"}</div>
+    <div class="card-title">${step.title}</div>
+    <div class="card-text">${step.instruction}</div>
+    <pre class="code-fill" style="margin:12px 0"><code>${tpl}</code></pre>
+    ${!answered?'<button class="btn primary w-full" id="check-fill">Check</button>':''}
+    <div id="fb"></div>`;
+  el.innerHTML=html;
+
+  if(answered){
+    document.getElementById("fb").innerHTML=`<div class="feedback good mt-md"><div class="why">${step.feedback}</div></div>`;
+    return;
+  }
+
+  document.getElementById("check-fill").onclick=()=>{
+    let allCorrect=true;
+    step.blanks.forEach(b=>{
+      const inp=document.querySelector(`[data-blank="${b.id}"]`);
+      const val=inp.value.trim();
+      const ok=b.accept.some(a=>a.toLowerCase()===val.toLowerCase());
+      inp.classList.add(ok?"correct":"wrong");
+      inp.readOnly=true;
+      if(!ok)allCorrect=false;
+    });
+    APP.scores[step.id]=allCorrect?1:0.5;
+    APP.times[step.id]=Date.now()-APP.stepStart;
+    document.getElementById("check-fill").remove();
+    document.getElementById("fb").innerHTML=`
+      <div class="feedback ${allCorrect?"good":"bad"} mt-md">
+        <b>${allCorrect?"All correct!":"Some blanks need fixing."}</b>
+        <div class="why">${step.feedback}</div>
+      </div>`;
+    unlock();save();
+  };
+},
+
+/* ── Match ── */
+match(el,step){
+  const answered=APP.scores[step.id]!==undefined;
+  let selected={left:null,right:null};
+  let matched=answered?step.pairs.map(p=>({l:p[0],r:p[1]})):[];
+
+  let html=`<div class="card-header">Build</div><div class="card-title">${step.title}</div>
+    <div class="card-text">${step.instruction}</div>
+    <div class="match-grid" id="mgrid"></div>
+    <div id="fb"></div>`;
+  el.innerHTML=html;
+
+  renderMatch(step,matched,selected,answered);
+
+  if(answered){
+    document.getElementById("fb").innerHTML=`<div class="feedback good mt-md"><div class="why">${step.feedback}</div></div>`;
+  }
+},
+
+/* ── Spot the Bug ── */
+spot(el,step){
+  const answered=APP.scores[step.id]!==undefined;
+  let html=`<div class="card-header">⚠ Edge Case</div><div class="card-title">${step.title}</div>
+    <div class="card-text">${step.instruction}</div>
+    <ul class="code-lines" id="clines">`;
+  step.lines.forEach(l=>{
+    const cls=answered?(l.bug?"correct-line":(APP.attempts[step.id]?.includes(l.num)?"wrong-line":"")):"";
+    html+=`<li class="code-line ${cls}" data-num="${l.num}" ${l.code?"":'style="height:12px"'}><span class="ln">${l.num}</span><span>${colorize(l.code)}</span></li>`;
+  });
+  html+=`</ul>`;
+  if(!answered)html+=`<button class="btn primary w-full mt-md" id="check-spot">Check selection</button>`;
+  html+=`<div id="fb"></div>`;
+  el.innerHTML=html;
+
+  if(answered){
+    showSpotFeedback(step);
+    return;
+  }
+
+  let selectedLines=new Set();
+  document.querySelectorAll("#clines .code-line").forEach(ln=>{
+    if(!ln.textContent.trim())return;
+    ln.onclick=()=>{
+      const num=parseInt(ln.dataset.num);
+      if(selectedLines.has(num)){selectedLines.delete(num);ln.classList.remove("selected");}
+      else{selectedLines.add(num);ln.classList.add("selected");}
+    };
+  });
+
+  document.getElementById("check-spot").onclick=()=>{
+    const bugLines=step.lines.filter(l=>l.bug).map(l=>l.num);
+    const correct=bugLines.every(n=>selectedLines.has(n))&&[...selectedLines].every(n=>bugLines.includes(n));
+    APP.scores[step.id]=correct?1:(selectedLines.size>0?0.3:0);
+    APP.attempts[step.id]=[...selectedLines];
+    APP.times[step.id]=Date.now()-APP.stepStart;
+
+    document.querySelectorAll("#clines .code-line").forEach(ln=>{
+      const num=parseInt(ln.dataset.num);
+      const isBug=bugLines.includes(num);
+      ln.classList.remove("selected");
+      if(isBug)ln.classList.add("correct-line");
+      else if(selectedLines.has(num))ln.classList.add("wrong-line");
+      ln.onclick=null;
+    });
+    document.getElementById("check-spot").remove();
+    showSpotFeedback(step);
+    unlock();save();
+  };
+},
+
+/* ── Recall ── */
+recall(el,step){
+  const answered=APP.scores[step.id]!==undefined;
+  let html=`<div class="card-header">\u{1F9E0} Retrieval Practice</div>
+    <div class="card-title" style="font-size:17px;font-weight:500">${step.question}</div>
+    <textarea id="recall-input" placeholder="Type your answer from memory…" ${answered?"readonly":""}>${answered?(APP.attempts[step.id]||""):""}</textarea>
+    ${!answered?'<button class="btn primary w-full mt-md" id="check-recall">Check</button>':''}
+    <div id="fb"></div>`;
+  el.innerHTML=html;
+
+  if(answered){
+    showRecallFeedback(step);
+    return;
+  }
+
+  document.getElementById("check-recall").onclick=()=>{
+    const val=document.getElementById("recall-input").value.trim().toLowerCase();
+    if(!val)return;
+    const hits=step.accept_patterns.filter(p=>val.includes(p));
+    const score=Math.min(hits.length/step.key_concepts.length,1);
+    APP.scores[step.id]=score;
+    APP.attempts[step.id]=val;
+    APP.times[step.id]=Date.now()-APP.stepStart;
+    document.getElementById("recall-input").readOnly=true;
+    document.getElementById("check-recall").remove();
+    showRecallFeedback(step);
+    unlock();save();
+  };
+},
+
+/* ── Explain ── */
+explain(el,step){
+  const answered=APP.scores[step.id]!==undefined;
+  let html=`<div class="card-header">\u{1F4AC} Teach It</div>
+    <div class="card-title" style="font-size:17px;font-weight:500">${step.prompt}</div>
+    <textarea id="explain-input" placeholder="Write your explanation…" rows="5" ${answered?"readonly":""}>${answered?(APP.attempts[step.id]||""):""}</textarea>
+    ${!answered?'<button class="btn primary w-full mt-md" id="check-explain">Submit</button>':''}
+    <div id="fb"></div>`;
+  el.innerHTML=html;
+
+  if(answered){
+    showExplainFeedback(step);
+    return;
+  }
+
+  document.getElementById("check-explain").onclick=()=>{
+    const val=document.getElementById("explain-input").value.trim();
+    if(val.split(/\s+/).length<(step.min_words||10)){
+      document.getElementById("fb").innerHTML=`<div class="feedback bad mt-md">Please write at least ${step.min_words||10} words.</div>`;
+      return;
+    }
+    const lower=val.toLowerCase();
+    const found=step.key_concepts.filter(k=>k.split(" ").some(w=>lower.includes(w.toLowerCase())));
+    const score=Math.min(found.length/step.key_concepts.length,1);
+    APP.scores[step.id]=score;
+    APP.attempts[step.id]=val;
+    APP.times[step.id]=Date.now()-APP.stepStart;
+    document.getElementById("explain-input").readOnly=true;
+    document.getElementById("check-explain").remove();
+    showExplainFeedback(step);
+    unlock();save();
+  };
+},
+
+/* ── Real World Scenario ── */
+scenario(el,step){
+  let answered=APP.scores[step.id]!==undefined;
+  let html=`<div class="scenario">
+    <div class="scenario-label">${step.label}</div>
+    <div class="scenario-text">${step.situation}</div>
+  </div>`;
+  if(step.code)html+=`<pre style="margin:10px 0;font-size:12px"><code>${colorize(step.code)}</code></pre>`;
+  html+=`<div class="card-title" style="font-size:16px;margin-top:12px">${step.question}</div>
+    <div class="choices" id="choices">`;
+  step.choices.forEach((c,i)=>{
+    const cls=answered?(c.correct?"correct":(APP.attempts[step.id]===i?"wrong":"")):"";
+    html+=`<div class="choice ${cls}" data-i="${i}">${c.text}</div>`;
+  });
+  html+=`</div><div id="fb"></div>`;
+  el.innerHTML=html;
+
+  if(answered){showPredictFeedback(step);return;}
+
+  document.querySelectorAll("#choices .choice").forEach(ch=>{
+    ch.onclick=()=>{
+      const i=parseInt(ch.dataset.i);
+      const correct=step.choices[i].correct;
+      APP.scores[step.id]=correct?1:0;
+      APP.attempts[step.id]=i;
+      APP.times[step.id]=Date.now()-APP.stepStart;
+      document.querySelectorAll("#choices .choice").forEach((c,j)=>{
+        c.classList.add(step.choices[j].correct?"correct":(j===i?"wrong":""));
+        c.onclick=null;
+      });
+      showPredictFeedback(step);
+      unlock();save();
+    };
+  });
+},
+
+/* ── Dashboard (final screen) ── */
+dashboard(el,step){
+  const acc=accuracy();
+  const elapsed=Math.round((Date.now()-APP.startTime)/1000);
+  const mins=Math.floor(elapsed/60);
+  const weak=weakAreas();
+  const completed=Object.keys(APP.scores).length;
+  const total=STEPS.filter((_,i)=>isGated(i)).length;
+  const mastery=Math.round((acc*0.6+pct()*0.4));
+
+  let html=`<div class="text-center">
+    <div style="font-size:48px;margin-bottom:8px">${mastery>=80?"\u{1F3C6}":mastery>=50?"\u{1F4AA}":"\u{1F331}"}</div>
+    <div class="card-title" style="font-size:24px">useState Mastery</div>
+    <div class="pill ${mastery>=80?"green":mastery>=50?"amber":"red"}" style="font-size:16px;padding:6px 16px;margin-top:8px">${mastery}%</div>
+  </div>
+
+  <div class="card mt-md">
+    <div class="dash-stat"><span class="label">Accuracy</span><span class="value ${acc>=80?"green":acc>=50?"amber":"red"}">${acc}%</span></div>
+    <div class="meter"><div class="meter-fill ${acc>=80?"green":acc>=50?"amber":"red"}" style="width:${acc}%"></div></div>
+    <div class="dash-stat mt-sm"><span class="label">Completion</span><span class="value">${pct()}%</span></div>
+    <div class="meter"><div class="meter-fill brand" style="width:${pct()}%"></div></div>
+    <div class="dash-stat mt-sm"><span class="label">Questions</span><span class="value">${completed} / ${total}</span></div>
+    <div class="dash-stat"><span class="label">Time</span><span class="value">${mins}m</span></div>
+  </div>
+
+  ${weak.length?`<div class="card mt-md">
+    <div style="font-weight:600;color:var(--amber);margin-bottom:8px">⚠ Review these areas</div>
+    <ul class="weak-list">${weak.map(w=>`<li class="weak-item"><span>${w.title}</span><span class="pill red">${Math.round(w.score*100)}%</span></li>`).join("")}</ul>
+    <button class="btn w-full mt-md" onclick="APP.step=0;render();">\u{1F504} Restart from beginning</button>
+  </div>`:`<div class="feedback good mt-md"><b>Excellent work!</b> You've demonstrated strong understanding of useState.</div>`}
+
+  <a href="index.html" class="btn primary w-full mt-md">← Back to all hooks</a>
+  <a href="useeffect.html" class="btn w-full mt-sm">Next: useEffect →</a>`;
+  el.innerHTML=html;
+  unlock();
+}
+
+};
+
+/* ═══════════════════════════════════════════
+   HELPER FUNCTIONS
+   ═══════════════════════════════════════════ */
+
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+
+function colorize(code){
+  return code
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/(const|let|var|function|return|if|else|switch|case|default|new|typeof|import|export|from|async|await)\b/g,'<span class="hl-kw">$1</span>')
+    .replace(/\b(useState|useEffect|useRef|useContext|useReducer|useMemo|useCallback|fetch|console|setInterval|clearInterval|JSON|Object|Array)\b/g,'<span class="hl-fn">$1</span>')
+    .replace(/(["'`])(?:(?!\1).)*?\1/g,'<span class="hl-str">$&</span>')
+    .replace(/\b(\d+)\b/g,'<span class="hl-num">$1</span>')
+    .replace(/(\/\/.*)/g,'<span class="hl-cm">$1</span>');
+}
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  if(a.every((v,i)=>v===arr[i]))return shuffle(a);
+  return a;
+}
+
+function showPredictFeedback(step){
+  const fb=document.getElementById("fb");
+  if(!fb)return;
+  const correct=APP.scores[step.id]===1;
+  let html=`<div class="feedback ${correct?"good":"bad"} mt-md">
+    <b>${correct?"Correct!":"Not quite."}</b>
+    <div class="why">${step.reveal}</div>
+  </div>`;
+  if(step.why_others&&!correct){
+    html+=`<div class="feedback info mt-sm"><b>Why the other options fail:</b>
+      <ul style="margin:6px 0 0;padding-left:18px;font-size:13px">
+        ${step.why_others.map(w=>`<li style="margin:4px 0">${w}</li>`).join("")}
+      </ul></div>`;
+  }
+  if(step.fix_code){
+    html+=`<div class="mt-sm"><div class="text-xs" style="color:var(--muted);margin-bottom:4px">The fix:</div><pre><code>${step.fix_code}</code></pre></div>`;
+  }
+  fb.innerHTML=html;
+}
+
+function showSpotFeedback(step){
+  const fb=document.getElementById("fb");
+  if(!fb)return;
+  const correct=APP.scores[step.id]===1;
+  let html=`<div class="feedback ${correct?"good":"bad"} mt-md">
+    <b>${correct?"You found it!":"Not quite."}</b>
+    <div class="why">${step.explanation}</div>
+  </div>`;
+  if(step.misconception){
+    html+=`<div class="feedback info mt-sm"><b>Common misconception:</b> <span class="why">${step.misconception}</span></div>`;
+  }
+  if(step.fix_code){
+    html+=`<div class="mt-sm"><div class="text-xs" style="color:var(--muted);margin-bottom:4px">The fix:</div><pre><code>${step.fix_code}</code></pre></div>`;
+  }
+  fb.innerHTML=html;
+}
+
+function showRecallFeedback(step){
+  const fb=document.getElementById("fb");
+  if(!fb)return;
+  const score=APP.scores[step.id];
+  const lower=(APP.attempts[step.id]||"").toLowerCase();
+  const found=step.key_concepts.filter(k=>k.split(" ").some(w=>lower.includes(w.toLowerCase())));
+  const missing=step.key_concepts.filter(k=>!found.includes(k));
+
+  let html=`<div class="feedback ${score>=0.8?"good":score>=0.5?"info":"bad"} mt-md">
+    <b>${score>=0.8?"Great recall!":score>=0.5?"Partial recall":"Key concepts missing"}</b>
+    <div class="why">${step.feedback}</div>
+  </div>
+  <div class="mt-sm"><div class="text-xs" style="color:var(--muted);margin-bottom:4px">Key concepts:</div>
+  <div class="key-concepts">
+    ${step.key_concepts.map(k=>`<span class="kc ${found.includes(k)?"found":"missing"}">${k}</span>`).join("")}
+  </div></div>`;
+  fb.innerHTML=html;
+}
+
+function showExplainFeedback(step){
+  const fb=document.getElementById("fb");
+  if(!fb)return;
+  const score=APP.scores[step.id];
+  const lower=(APP.attempts[step.id]||"").toLowerCase();
+  const found=step.key_concepts.filter(k=>k.split(" ").some(w=>lower.includes(w.toLowerCase())));
+  const missing=step.key_concepts.filter(k=>!found.includes(k));
+
+  let html=`<div class="feedback ${score>=0.8?"good":score>=0.5?"info":"bad"} mt-md">
+    <b>${score>=0.8?"Excellent explanation!":score>=0.5?"Good start, but some ideas are missing":"Key ideas missing"}</b>
+  </div>
+  <div class="key-concepts mt-sm">
+    ${step.key_concepts.map(k=>`<span class="kc ${found.includes(k)?"found":"missing"}">${found.includes(k)?"✓":"?"} ${k}</span>`).join("")}
+  </div>`;
+  if(step.model_answer){
+    html+=`<div class="feedback info mt-sm"><b>Model answer:</b> <span class="why">${step.model_answer}</span></div>`;
+  }
+  fb.innerHTML=html;
+}
+
+/* ── Drag to Order ── */
+function renderOrder(step,order,done){
+  const zone=document.getElementById("dzone");
+  zone.innerHTML="";
+  order.forEach((id,i)=>{
+    const item=step.items.find(x=>x.id===id);
+    const d=document.createElement("div");
+    d.className="drag-item"+(done?(id===step.correct_order[i]?" correct":" wrong"):"");
+    d.dataset.id=id;
+    d.dataset.idx=i;
+    d.innerHTML=`<span class="handle">☰</span><span class="pill brand" style="min-width:24px;justify-content:center">${i+1}</span><span>${item.text}</span>`;
+    zone.appendChild(d);
+  });
+}
+
+function initDragOrder(step,order){
+  const zone=document.getElementById("dzone");
+  let dragIdx=null;
+
+  zone.addEventListener("pointerdown",e=>{
+    const item=e.target.closest(".drag-item");
+    if(!item)return;
+    dragIdx=parseInt(item.dataset.idx);
+    item.classList.add("dragging");
+    item.setPointerCapture(e.pointerId);
+  });
+
+  zone.addEventListener("pointermove",e=>{
+    if(dragIdx===null)return;
+    const items=[...zone.querySelectorAll(".drag-item")];
+    const rects=items.map(i=>i.getBoundingClientRect());
+    items.forEach((item,i)=>{
+      item.classList.toggle("over",i!==dragIdx&&e.clientY>=rects[i].top&&e.clientY<=rects[i].bottom);
+    });
+  });
+
+  zone.addEventListener("pointerup",e=>{
+    if(dragIdx===null)return;
+    const items=[...zone.querySelectorAll(".drag-item")];
+    const rects=items.map(i=>i.getBoundingClientRect());
+    let dropIdx=dragIdx;
+    rects.forEach((r,i)=>{
+      if(i!==dragIdx&&e.clientY>=r.top&&e.clientY<=r.bottom)dropIdx=i;
+    });
+    if(dropIdx!==dragIdx){
+      const [moved]=order.splice(dragIdx,1);
+      order.splice(dropIdx,0,moved);
+    }
+    items.forEach(i=>{i.classList.remove("dragging","over");});
+    dragIdx=null;
+    renderOrder(step,order,false);
+    initDragOrder(step,order);
+  });
+}
+
+/* ── Match ── */
+function renderMatch(step,matched,selected,done){
+  const grid=document.getElementById("mgrid");
+  grid.innerHTML="";
+
+  const col1=document.createElement("div");
+  col1.className="flex-col gap-sm";
+  const col2=document.createElement("div");
+  col2.className="flex-col gap-sm";
+
+  step.left.forEach(l=>{
+    const isMatched=matched.some(m=>m.l===l.id);
+    const d=document.createElement("div");
+    d.className="match-item"+(isMatched?" matched correct":"")+(selected.left===l.id?" selected":"");
+    d.textContent=l.text;
+    d.dataset.side="left";
+    d.dataset.id=l.id;
+    if(!done&&!isMatched)d.onclick=()=>handleMatchClick("left",l.id,step,matched,selected,done);
+    col1.appendChild(d);
+  });
+  step.right.forEach(r=>{
+    const isMatched=matched.some(m=>m.r===r.id);
+    const d=document.createElement("div");
+    d.className="match-item"+(isMatched?" matched correct":"")+(selected.right===r.id?" selected":"");
+    d.textContent=r.text;
+    d.dataset.side="right";
+    d.dataset.id=r.id;
+    if(!done&&!isMatched)d.onclick=()=>handleMatchClick("right",r.id,step,matched,selected,done);
+    col2.appendChild(d);
+  });
+  grid.appendChild(col1);
+  grid.appendChild(col2);
+}
+
+function handleMatchClick(side,id,step,matched,selected,done){
+  selected[side]=id;
+  if(selected.left&&selected.right){
+    const isCorrectPair=step.pairs.some(p=>p[0]===selected.left&&p[1]===selected.right);
+    if(isCorrectPair){
+      matched.push({l:selected.left,r:selected.right});
+      if(matched.length===step.pairs.length){
+        APP.scores[step.id]=1;
+        APP.times[step.id]=Date.now()-APP.stepStart;
+        document.getElementById("fb").innerHTML=`<div class="feedback good mt-md"><b>All matched!</b><div class="why">${step.feedback}</div></div>`;
+        unlock();save();
+        renderMatch(step,matched,{left:null,right:null},true);
+        return;
       }
+    }else{
+      const items=document.querySelectorAll(".match-item.selected");
+      items.forEach(i=>{i.classList.add("wrong");});
+      setTimeout(()=>{items.forEach(i=>{i.classList.remove("wrong","selected");});},500);
+    }
+    selected.left=null;selected.right=null;
+  }
+  renderMatch(step,matched,selected,done);
+}
 
-      document.getElementById("a-inc").onclick = () => { count++; render(); };
-      document.getElementById("a-dec").onclick = () => { count--; render(); };
-      document.getElementById("a-reset").onclick = () => {
-        count = 0; name = "";
-        document.getElementById("a-name").value = "";
-        render();
-      };
-      document.getElementById("a-name").oninput = (e) => {
-        name = e.target.value; render();
-      };
+/* ── Concept Map Lines (CSS-based) ── */
+function drawMapLines(container,step){
+  const update=()=>{
+    container.querySelectorAll(".map-line").forEach(l=>l.remove());
+    const nodes={};
+    container.querySelectorAll(".map-node").forEach(n=>{
+      const r=n.getBoundingClientRect();
+      const cr=container.getBoundingClientRect();
+      nodes[n.dataset.node]={x:r.left-cr.left+r.width/2,y:r.top-cr.top+r.height/2};
+    });
+    step.edges.forEach(([from,to])=>{
+      if(!nodes[from]||!nodes[to])return;
+      const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+      svg.classList.add("map-line");
+      svg.style.cssText=`position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible`;
+      const line=document.createElementNS("http://www.w3.org/2000/svg","line");
+      line.setAttribute("x1",nodes[from].x);line.setAttribute("y1",nodes[from].y);
+      line.setAttribute("x2",nodes[to].x);line.setAttribute("y2",nodes[to].y);
+      line.setAttribute("stroke","rgba(97,218,251,0.2)");line.setAttribute("stroke-width","2");
+      line.setAttribute("stroke-dasharray","6 4");
+      svg.appendChild(line);
+      container.appendChild(svg);
+    });
+  };
+  setTimeout(update,50);
+  window.addEventListener("resize",update);
+}
 
-      log.add("initial render → count=0", "warn");
-    })();
+/* ═══════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════ */
+render();
 
-    // ---------- Scenario B: stale vs functional ----------
-    (function () {
-      const root = document.getElementById("demoB");
-      const log = makeLogger(document.getElementById("b-log"));
-      let count = 0;
-
-      function paint() {
-        document.getElementById("b-count").textContent = count;
-        flash(root);
-      }
-
-      document.getElementById("b-wrong").onclick = () => {
-        const snapshot = count; // the value the click "captured"
-        // three calls, all using the same captured snapshot
-        let next = snapshot + 1;
-        next = snapshot + 1;
-        next = snapshot + 1;
-        count = next;
-        paint();
-        log.add("wrong: 3× setCount(count+1) with count=" + snapshot +
-          " → only +1 (now " + count + ")", "err");
-      };
-
-      document.getElementById("b-right").onclick = () => {
-        // functional updates chain off each other
-        count = count + 1;
-        count = count + 1;
-        count = count + 1;
-        paint();
-        log.add("right: 3× setCount(c=>c+1) → +3 (now " + count + ")", "ok");
-      };
-
-      document.getElementById("b-reset").onclick = () => {
-        count = 0; paint(); log.clear();
-        log.add("reset → 0", "warn");
-      };
-
-      log.add("tap a button to compare", "warn");
-    })();
-  </script>
+})();
+</script>
 </body>
 </html>

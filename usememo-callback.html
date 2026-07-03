@@ -1,240 +1,1359 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0f1220" />
-  <title>useMemo &amp; useCallback — Learn React Hooks</title>
-  <link rel="stylesheet" href="styles.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#0a0e1a">
+<title>useMemo & useCallback Mastery — Learn React Hooks</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e1a;--bg2:#111627;--card:#181d30;--card2:#1e2540;
+  --line:#2a3155;--text:#e4e8f7;--muted:#8b93b8;
+  --brand:#61dafb;--brand-dim:rgba(97,218,251,.12);
+  --purple:#7c5cff;--green:#4ade80;--red:#f87171;--amber:#ffb454;
+  --radius:16px;--mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --ease:cubic-bezier(.4,0,.2,1);
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.55;min-height:100dvh;display:flex;flex-direction:column;overflow:hidden;-webkit-font-smoothing:antialiased}
+#app{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+
+/* ── Header ── */
+.topbar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:rgba(10,14,26,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);z-index:50;flex-shrink:0}
+.topbar .back{color:var(--brand);text-decoration:none;font-size:14px;font-weight:600;display:flex;align-items:center;gap:4px}
+.topbar .spacer{flex:1}
+.topbar .phase-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.progress-track{height:4px;background:var(--line);border-radius:2px;flex-shrink:0}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--purple));border-radius:2px;transition:width .4s var(--ease)}
+
+/* ── Screen container ── */
+.screen-wrap{flex:1;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+.screen{min-height:100%;padding:20px 16px calc(20px + var(--safe-b));display:flex;flex-direction:column;gap:16px;animation:fadeUp .35s var(--ease)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* ── Bottom nav ── */
+.bottombar{display:flex;gap:8px;padding:10px 16px calc(10px + var(--safe-b));background:rgba(10,14,26,.95);backdrop-filter:blur(12px);border-top:1px solid var(--line);flex-shrink:0;z-index:50}
+.bottombar .btn{flex:1}
+.bottombar .btn.primary{background:var(--brand);color:#06222c}
+.bottombar .btn.primary:disabled{background:var(--line);color:var(--muted)}
+
+/* ── Cards ── */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;transition:border-color .2s}
+.card-header{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:10px}
+.card-title{font-size:20px;font-weight:700;line-height:1.2;margin-bottom:8px}
+.card-text{color:var(--muted);font-size:15px;line-height:1.5}
+
+/* ── Buttons ── */
+.btn{appearance:none;border:1px solid var(--line);background:var(--card2);color:var(--text);font:inherit;font-size:15px;font-weight:600;padding:12px 18px;border-radius:12px;cursor:pointer;min-height:48px;transition:all .15s var(--ease);display:inline-flex;align-items:center;justify-content:center;gap:8px;-webkit-tap-highlight-color:transparent;user-select:none}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn.sm{min-height:40px;padding:8px 14px;font-size:14px;border-radius:10px}
+.btn.primary{background:var(--brand);color:#06222c;border-color:var(--brand);font-weight:700}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--brand)}
+.btn.danger{background:rgba(248,113,113,.15);border-color:rgba(248,113,113,.3);color:var(--red)}
+.btn.success{background:rgba(74,222,128,.15);border-color:rgba(74,222,128,.3);color:var(--green)}
+.btn.selected{background:var(--brand);color:#06222c;border-color:var(--brand)}
+
+/* ── Concept Map ── */
+.concept-map{position:relative;min-height:320px;margin:8px 0}
+.map-node{position:absolute;background:var(--card2);border:2px solid var(--line);border-radius:14px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;transition:all .25s var(--ease);text-align:center;z-index:2;-webkit-tap-highlight-color:transparent}
+.map-node:active{transform:scale(.95)}
+.map-node.active{border-color:var(--brand);background:var(--brand-dim);box-shadow:0 0 20px rgba(97,218,251,.2)}
+.map-node .icon{font-size:22px;display:block;margin-bottom:4px}
+.map-node .label{font-family:var(--mono);font-size:12px;color:var(--brand)}
+.map-line{position:absolute;z-index:1}
+.map-desc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:14px;color:var(--muted);animation:fadeUp .25s var(--ease);margin-top:8px}
+
+/* ── Code ── */
+pre{background:#080b14;border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.55;margin:0}
+code{font-family:var(--mono)}
+.hl-kw{color:#c792ea}.hl-fn{color:var(--brand)}.hl-str{color:#c3e88d}.hl-num{color:var(--amber)}.hl-cm{color:#5a6180;font-style:italic}.hl-err{color:var(--red);text-decoration:wavy underline var(--red)}
+
+/* ── Drag/Drop ── */
+.drag-zone{display:flex;flex-direction:column;gap:8px}
+.drag-item{background:var(--card2);border:2px solid var(--line);border-radius:12px;padding:12px 16px;font-size:15px;cursor:grab;touch-action:none;user-select:none;transition:all .15s var(--ease);display:flex;align-items:center;gap:10px}
+.drag-item:active{cursor:grabbing}
+.drag-item .handle{color:var(--muted);font-size:18px;flex-shrink:0}
+.drag-item.dragging{opacity:.5;border-color:var(--brand)}
+.drag-item.over{border-color:var(--brand);background:var(--brand-dim)}
+.drag-item.correct{border-color:var(--green);background:rgba(74,222,128,.08)}
+.drag-item.wrong{border-color:var(--red);background:rgba(248,113,113,.08)}
+.drop-slot{min-height:48px;border:2px dashed var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;transition:all .15s var(--ease)}
+.drop-slot.over{border-color:var(--brand);background:var(--brand-dim)}
+.drop-slot.filled{border-style:solid;border-color:var(--brand);background:var(--brand-dim)}
+
+/* ── Match ── */
+.match-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.match-item{background:var(--card2);border:2px solid var(--line);border-radius:12px;padding:12px;font-size:14px;cursor:pointer;transition:all .15s var(--ease);text-align:center;min-height:48px;display:flex;align-items:center;justify-content:center}
+.match-item.selected{border-color:var(--brand);background:var(--brand-dim)}
+.match-item.correct{border-color:var(--green);background:rgba(74,222,128,.1)}
+.match-item.wrong{border-color:var(--red);background:rgba(248,113,113,.1)}
+.match-item.matched{opacity:.5;pointer-events:none}
+
+/* ── Code Fill ── */
+.code-fill{position:relative}
+.code-fill input{font-family:var(--mono);font-size:13px;background:rgba(97,218,251,.1);border:1px dashed var(--brand);color:var(--brand);padding:2px 8px;border-radius:6px;width:auto;min-width:80px;outline:none}
+.code-fill input:focus{border-style:solid;box-shadow:0 0 0 2px rgba(97,218,251,.2)}
+.code-fill input.correct{border-color:var(--green);color:var(--green);background:rgba(74,222,128,.1)}
+.code-fill input.wrong{border-color:var(--red);color:var(--red);background:rgba(248,113,113,.1)}
+
+/* ── Spot Bug ── */
+.code-lines{list-style:none;font-family:var(--mono);font-size:13px;line-height:1.6}
+.code-line{padding:4px 12px;cursor:pointer;border-radius:8px;transition:all .12s;border:2px solid transparent;display:flex;gap:8px}
+.code-line:hover,.code-line:active{background:rgba(255,255,255,.04)}
+.code-line .ln{color:var(--muted);min-width:20px;text-align:right;user-select:none}
+.code-line.selected{border-color:var(--amber);background:rgba(255,180,84,.08)}
+.code-line.correct-line{border-color:var(--green);background:rgba(74,222,128,.08)}
+.code-line.wrong-line{border-color:var(--red);background:rgba(248,113,113,.08)}
+
+/* ── Inputs ── */
+textarea{font:inherit;font-size:15px;padding:14px;border-radius:12px;border:1px solid var(--line);background:var(--bg2);color:var(--text);min-height:100px;width:100%;resize:vertical;line-height:1.5}
+textarea:focus{outline:2px solid var(--brand);outline-offset:1px}
+input[type="text"]{font:inherit;font-size:16px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg2);color:var(--text);min-height:48px;width:100%}
+input[type="text"]:focus{outline:2px solid var(--brand);outline-offset:1px}
+
+/* ── Feedback ── */
+.feedback{border-radius:12px;padding:14px 16px;font-size:14px;line-height:1.5;animation:fadeUp .25s var(--ease)}
+.feedback.good{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);color:var(--green)}
+.feedback.bad{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:var(--red)}
+.feedback.info{background:rgba(97,218,251,.08);border:1px solid rgba(97,218,251,.2);color:var(--brand)}
+.feedback .why{color:var(--text);margin-top:6px;font-size:13px}
+
+/* ── Confidence ── */
+.confidence-row{display:flex;gap:6px;flex-wrap:wrap}
+.conf-btn{flex:1;min-width:0}
+
+/* ── Dashboard ── */
+.dash-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:flex;justify-content:flex-end;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.dash-panel{width:min(380px,90vw);background:var(--bg2);border-left:1px solid var(--line);padding:20px;overflow-y:auto;animation:slideLeft .3s var(--ease)}
+@keyframes slideLeft{from{transform:translateX(100%)}to{transform:none}}
+.dash-section{margin-bottom:20px}
+.dash-title{font-size:18px;font-weight:700;margin-bottom:14px}
+.dash-stat{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.dash-stat .label{color:var(--muted);font-size:14px}
+.dash-stat .value{font-family:var(--mono);font-weight:700;font-size:15px}
+.meter{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:6px}
+.meter-fill{height:100%;border-radius:4px;transition:width .5s var(--ease)}
+.meter-fill.brand{background:var(--brand)}
+.meter-fill.green{background:var(--green)}
+.meter-fill.amber{background:var(--amber)}
+.meter-fill.red{background:var(--red)}
+.weak-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.weak-item{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+
+/* ── Pill / Tag ── */
+.pill{font-family:var(--mono);font-size:12px;padding:3px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:4px}
+.pill.brand{background:var(--brand-dim);color:var(--brand);border:1px solid rgba(97,218,251,.25)}
+.pill.green{background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.25)}
+.pill.amber{background:rgba(255,180,84,.1);color:var(--amber);border:1px solid rgba(255,180,84,.25)}
+.pill.red{background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.25)}
+.pill.purple{background:rgba(124,92,255,.1);color:var(--purple);border:1px solid rgba(124,92,255,.25)}
+
+/* ── Choice grid ── */
+.choices{display:flex;flex-direction:column;gap:8px}
+.choice{background:var(--card2);border:2px solid var(--line);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .15s var(--ease);font-size:15px;text-align:left;-webkit-tap-highlight-color:transparent}
+.choice:active{transform:scale(.98)}
+.choice.selected{border-color:var(--brand);background:var(--brand-dim)}
+.choice.correct{border-color:var(--green);background:rgba(74,222,128,.1)}
+.choice.wrong{border-color:var(--red);background:rgba(248,113,113,.1)}
+.choice code{font-size:13px;background:rgba(255,255,255,.06);padding:1px 6px;border-radius:4px}
+
+/* ── Scenario box ── */
+.scenario{background:linear-gradient(135deg,var(--card) 0%,var(--card2) 100%);border:1px solid var(--line);border-radius:var(--radius);padding:18px;position:relative;overflow:hidden}
+.scenario::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--purple),var(--brand))}
+.scenario-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--purple);margin-bottom:8px}
+.scenario-text{font-size:15px;line-height:1.55}
+
+/* ── Key concepts ── */
+.key-concepts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.kc{font-size:12px;padding:4px 10px;border-radius:8px;border:1px solid var(--line);color:var(--muted);transition:all .2s}
+.kc.found{border-color:var(--green);color:var(--green);background:rgba(74,222,128,.08)}
+.kc.missing{border-color:var(--amber);color:var(--amber);background:rgba(255,180,84,.08)}
+
+/* ── Misc ── */
+.divider{height:1px;background:var(--line);margin:4px 0}
+.gap-sm{gap:8px}.gap-md{gap:12px}.gap-lg{gap:16px}
+.flex-col{display:flex;flex-direction:column}
+.flex-row{display:flex;align-items:center}
+.flex-wrap{flex-wrap:wrap}
+.text-center{text-align:center}
+.text-sm{font-size:13px}.text-xs{font-size:11px}
+.mt-xs{margin-top:4px}.mt-sm{margin-top:8px}.mt-md{margin-top:12px}
+.w-full{width:100%}
+.mono{font-family:var(--mono)}
+.brand{color:var(--brand)}.green{color:var(--green)}.red{color:var(--red)}.amber{color:var(--amber)}.purple{color:var(--purple)}
+.kbd{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 6px;background:var(--card2);border:1px solid var(--line);border-radius:6px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+
+@media(min-width:600px){
+  .screen{padding:28px 24px 40px;max-width:640px;margin:0 auto}
+  .match-grid{gap:14px}
+}
+@media(min-width:900px){
+  .screen{max-width:720px}
+}
+</style>
 </head>
 <body>
-  <header class="topbar">
-    <a class="home" href="index.html">
-      <svg class="logo" viewBox="-11.5 -10.23 23 20.46" fill="none" aria-hidden="true">
-        <circle r="2" fill="#61dafb"></circle>
-        <g stroke="#61dafb" stroke-width="1">
-          <ellipse rx="11" ry="4.2"></ellipse>
-          <ellipse rx="11" ry="4.2" transform="rotate(60)"></ellipse>
-          <ellipse rx="11" ry="4.2" transform="rotate(120)"></ellipse>
-        </g>
-      </svg>
-    </a>
-    <span class="spacer"></span>
-    <span class="crumb">06 · useMemo / useCallback</span>
-  </header>
+<div id="app"></div>
+<script>
+(function(){
+"use strict";
 
-  <main class="wrap" data-tabscope>
-    <section class="hero">
-      <span class="eyebrow">useMemo · useCallback</span>
-      <h1>Skip needless work</h1>
-      <p>Two performance helpers. <code>useMemo</code> remembers a <i>computed value</i>; <code>useCallback</code> remembers a <i>function</i> — so they aren't rebuilt on every render.</p>
-    </section>
+/* ═══════════════════════════════════════════
+   CONTENT DATA — useMemo & useCallback mastery screens
+   ═══════════════════════════════════════════ */
 
-    <div class="card">
-      <h3>In plain words</h3>
-      <pre><code><span class="tok-com">// remember a value; recompute only when [a, b] change</span>
-<span class="tok-key">const</span> total = <span class="tok-fn">useMemo</span>(() =&gt; <span class="tok-fn">expensive</span>(a, b), [a, b]);
+const PHASES = [
+  {id:"map",name:"Mental Map",icon:"\u{1F5FA}"},
+  {id:"predict",name:"Predict",icon:"\u{1F914}"},
+  {id:"learn",name:"Learn",icon:"\u{1F4A1}"},
+  {id:"build",name:"Build",icon:"\u{1F6E0}"},
+  {id:"recall",name:"Recall",icon:"\u{1F9E0}"},
+  {id:"edge",name:"Edge Cases",icon:"\u{26A0}"},
+  {id:"teach",name:"Teach",icon:"\u{1F4AC}"},
+  {id:"real",name:"Real World",icon:"\u{1F30D}"},
+  {id:"challenge",name:"Challenge",icon:"\u{1F525}"},
+  {id:"mastery",name:"Mastery",icon:"\u{1F3C6}"}
+];
 
-<span class="tok-com">// remember a function; rebuild only when [a, b] change</span>
-<span class="tok-key">const</span> onClick = <span class="tok-fn">useCallback</span>(() =&gt; <span class="tok-fn">doThing</span>(a, b), [a, b]);</code></pre>
-      <div class="analogy">
-        <div class="emoji">🧮</div>
-        <div class="txt">Like writing a hard sum's answer on a sticky note. Next time you're asked, you read the note instead of doing the maths again — unless the numbers changed.</div>
-      </div>
-      <div class="note warn">
-        <b>Don't reach for these first.</b> Most components are fast enough without them. Add them only when you
-        measure a real slowdown, or when a value/function is fed to a memoized child.
-      </div>
+const STEPS = [
+
+// ── Phase 0: MENTAL MAP ──
+{
+  id:"map1", phase:0, type:"map",
+  title:"The Memoization Cycle",
+  subtitle:"Tap each node to understand how useMemo and useCallback optimize rendering.",
+  nodes:[
+    {id:"render",x:50,y:5,icon:"\u{1F504}",label:"Component Render",desc:"Every time your component re-renders, all code inside the function body runs again — including expensive computations and new function/object creation."},
+    {id:"expensive",x:15,y:32,icon:"\u{23F3}",label:"Expensive Computation",desc:"Operations like sorting, filtering, or complex math that take noticeable time. Without memoization, they run on every single render."},
+    {id:"usememo",x:15,y:62,icon:"\u{1F4E6}",label:"useMemo",desc:"Caches a computed VALUE. React skips the computation and returns the cached result if dependencies haven't changed since the last render."},
+    {id:"usecallback",x:85,y:62,icon:"\u{1F517}",label:"useCallback",desc:"Caches a FUNCTION reference. Returns the same function object if dependencies haven't changed. Useful when passing callbacks to optimized children."},
+    {id:"deps",x:50,y:45,icon:"\u{1F50D}",label:"Dependency Array",desc:"The list of values React checks between renders. If every dependency is the same (via Object.is), the cached result is reused. If any changed, recomputation happens."},
+    {id:"cached",x:15,y:90,icon:"\u{2705}",label:"Cached Result",desc:"The previously computed value or function reference. Reused when dependencies haven't changed, saving computation time and preserving referential identity."},
+    {id:"memo_child",x:85,y:90,icon:"\u{1F6E1}",label:"React.memo Child",desc:"A child component wrapped in React.memo. It skips re-rendering if its props haven't changed. useCallback helps by keeping function-prop references stable."}
+  ],
+  edges:[["render","expensive"],["render","deps"],["expensive","usememo"],["deps","usememo"],["deps","usecallback"],["usememo","cached"],["usecallback","memo_child"],["render","usecallback"]]
+},
+
+// ── Phase 1: PREDICT ──
+{
+  id:"pred1", phase:1, type:"predict",
+  question:"Your component re-renders 100 times per second (e.g., during an animation). Each render runs a heavy sort on a 10,000-item list. The list itself hasn't changed. Should React recompute the sort every time?",
+  choices:[
+    {text:"Yes — React must always recalculate to stay in sync",correct:false},
+    {text:"No — if the input hasn't changed, the result is the same and can be cached",correct:true},
+    {text:"It depends on whether the component is a class or function",correct:false}
+  ],
+  reveal:"If the input data hasn't changed, re-sorting produces the exact same result. This is wasted work. useMemo lets you tell React: \"only recompute this when these specific inputs change.\" The key principle is: same inputs = same output, so skip the work.",
+  why_others:[
+    "React doesn't need to recompute if nothing relevant changed. Blindly recalculating is wasteful — that's the whole reason memoization exists.",
+    "Both class and function components can benefit from memoization. The concept isn't tied to component type."
+  ]
+},
+{
+  id:"pred2", phase:1, type:"predict",
+  question:"You pass an onClick callback to a child wrapped in React.memo. The parent re-renders (e.g., a timer ticks) but the callback logic hasn't changed. Does the child re-render?",
+  choices:[
+    {text:"No — React.memo sees the same function and skips",correct:false},
+    {text:"Yes — the parent creates a new function object each render, so React.memo sees a 'new' prop",correct:true},
+    {text:"Only if the child actually calls the callback",correct:false}
+  ],
+  reveal:"Every render creates a brand-new function object. Even though the logic is identical, it's a different reference in memory. React.memo compares props with Object.is(), which checks reference equality — new reference means new prop, so the child re-renders. useCallback solves this by returning the same function reference when dependencies haven't changed.",
+  why_others:[
+    "React.memo checks referential equality. A new function object (even with identical code) fails the Object.is comparison, triggering a re-render.",
+    "React.memo doesn't know or care whether the child uses the prop — it simply compares all props by reference."
+  ]
+},
+
+// ── Phase 2: LEARN (tiny chunks) ──
+{
+  id:"chunk1", phase:2, type:"info",
+  title:"useMemo: cache a computed value",
+  visual:"code",
+  code:'<span class="hl-kw">const</span> sorted = <span class="hl-fn">useMemo</span>(() =&gt; {\n  <span class="hl-kw">return</span> items.<span class="hl-fn">sort</span>((a, b) =&gt; a.price - b.price);\n}, [items]);',
+  points:[
+    "<b>() =&gt; { ... }</b> — a function that computes the value (runs only when needed)",
+    "<b>[items]</b> — the dependency array. React recomputes only when <code>items</code> changes",
+    "<b>sorted</b> — receives the cached result. Same reference if deps haven't changed"
+  ],
+  key_idea:"useMemo takes a computation function and a dependency array. On re-renders, it checks if dependencies changed — if not, it returns the previously cached result without running the function."
+},
+{
+  id:"chunk2", phase:2, type:"info",
+  title:"useCallback: cache a function reference",
+  visual:"code",
+  code:'<span class="hl-kw">const</span> handleClick = <span class="hl-fn">useCallback</span>(() =&gt; {\n  <span class="hl-fn">setCount</span>(c =&gt; c + <span class="hl-num">1</span>);\n}, []);',
+  points:[
+    "<b>() =&gt; { ... }</b> — the function to cache (not the result of calling it!)",
+    "<b>[]</b> — empty deps means: return the same function reference forever",
+    "<b>handleClick</b> — same function object across renders (referential stability)"
+  ],
+  key_idea:"useCallback caches the function itself, not its return value. This is essential when passing callbacks to children wrapped in React.memo — a stable reference prevents unnecessary child re-renders."
+},
+{
+  id:"chunk3", phase:2, type:"info",
+  title:"The secret: they're the same thing",
+  visual:"code",
+  code:'<span class="hl-cm">// These two are equivalent:</span>\n<span class="hl-fn">useCallback</span>(fn, deps)\n\n<span class="hl-fn">useMemo</span>(() =&gt; fn, deps)',
+  points:[
+    "<b>useCallback(fn, deps)</b> caches the function <em>fn</em> itself",
+    "<b>useMemo(() =&gt; fn, deps)</b> runs <code>() =&gt; fn</code> and caches the result — which is <em>fn</em>",
+    "useCallback is just syntactic sugar for a common useMemo pattern"
+  ],
+  key_idea:"useCallback(fn, deps) is exactly equivalent to useMemo(() => fn, deps). useCallback caches the function, useMemo caches the value. When the \"value\" IS a function, they're identical."
+},
+
+// ── Phase 3: BUILD (active construction) ──
+{
+  id:"build1", phase:3, type:"order",
+  title:"How useMemo decides whether to recompute",
+  instruction:"Drag these steps into the correct order. What happens when a component with useMemo re-renders?",
+  items:[
+    {id:"a",text:"Component function is called (re-render)"},
+    {id:"b",text:"React reaches the useMemo call"},
+    {id:"c",text:"React compares current deps to previous deps using Object.is"},
+    {id:"d",text:"If ALL deps are the same: return cached value (skip computation)"},
+    {id:"e",text:"If ANY dep changed: run the computation function"},
+    {id:"f",text:"Store new result + new deps for next comparison"}
+  ],
+  correct_order:["a","b","c","d","e","f"],
+  feedback:"The key insight is step 3: React checks each dependency with Object.is(). This is shallow comparison — it checks reference equality for objects/arrays. That's why you need a new array/object reference for React to detect a change."
+},
+{
+  id:"build2", phase:3, type:"fill",
+  title:"Complete the useMemo for filtering",
+  instruction:"Fill in the blanks to memoize a filtered product list. The filter should only rerun when the products array or the search query changes.",
+  template:'<span class="hl-kw">const</span> filtered = <span class="hl-fn">____1____</span>(() =&gt; {\n  <span class="hl-kw">return</span> products.<span class="hl-fn">____2____</span>(p =&gt;\n    p.name.<span class="hl-fn">toLowerCase</span>().<span class="hl-fn">includes</span>(____3____)\n  );\n}, [____4____, ____5____]);',
+  blanks:[
+    {id:"1",answer:"useMemo",hint:"the memoization hook",accept:["useMemo"]},
+    {id:"2",answer:"filter",hint:"array method to select matching items",accept:["filter"]},
+    {id:"3",answer:"query.toLowerCase()",hint:"the search term, case-insensitive",accept:["query.toLowerCase()","query","search.toLowerCase()","search","q.toLowerCase()","q"]},
+    {id:"4",answer:"products",hint:"first dependency",accept:["products","query"]},
+    {id:"5",answer:"query",hint:"second dependency",accept:["query","products","search","q"]}
+  ],
+  feedback:"The dependency array [products, query] tells React: only re-filter when the products array or search query actually changes. On renders triggered by unrelated state (like toggling a sidebar), the filtered list is returned from cache instantly."
+},
+{
+  id:"build3", phase:3, type:"match",
+  title:"When to memoize vs. when NOT to",
+  instruction:"Match each scenario to whether memoization is appropriate.",
+  left:[
+    {id:"a",text:"Sorting 10K items on every render"},
+    {id:"b",text:"Adding two numbers: a + b"},
+    {id:"c",text:"Callback passed to React.memo child"},
+    {id:"d",text:"Inline style object: {color: 'red'}"}
+  ],
+  right:[
+    {id:"w",text:"useMemo: expensive computation worth caching"},
+    {id:"x",text:"Skip it: trivial operation, overhead not worth it"},
+    {id:"y",text:"useCallback: stabilize reference for memo'd child"},
+    {id:"z",text:"Consider useMemo: new object each render breaks memo"}
+  ],
+  pairs:[["a","w"],["b","x"],["c","y"],["d","z"]],
+  feedback:"Memoization has a cost (memory + comparison overhead). It pays off for expensive computations and referential stability needed by React.memo. For trivial operations like a + b, the memoization overhead may exceed the computation itself. Measure first, memoize second."
+},
+
+// ── Phase 4: RECALL ──
+{
+  id:"recall1", phase:4, type:"recall",
+  question:"Without looking back: what is the relationship between useMemo and useCallback? How are they the same, and how are they different?",
+  key_concepts:["cache value","cache function","useCallback is useMemo","dependency array","same reference"],
+  accept_patterns:["value","cache","function","memo","reference","depend","same","sugar","equivalent"],
+  feedback:"useMemo caches a computed VALUE. useCallback caches a FUNCTION reference. They both use a dependency array and return cached results when deps haven't changed. useCallback(fn, deps) is literally the same as useMemo(() => fn, deps) — it's syntactic sugar."
+},
+{
+  id:"recall2", phase:4, type:"predict",
+  question:"Given:\nconst sorted = useMemo(() => sort(items), [items]);\n\nYou change the theme state (dark mode toggle). The items array hasn't changed. Does the sort run again?",
+  choices:[
+    {text:"Yes — any state change re-runs all hooks",correct:false},
+    {text:"No — items hasn't changed, so useMemo returns the cached sorted result",correct:true},
+    {text:"It depends on whether theme is in the component",correct:false}
+  ],
+  reveal:"The component re-renders (because theme state changed), but when React reaches the useMemo, it compares [items] to the previous [items]. Since items is the same reference, React skips the sort and returns the cached result. This is exactly the point: decouple expensive work from unrelated re-renders.",
+  why_others:[
+    "Hooks do run on every render, but useMemo's whole purpose is to check dependencies and skip the computation if they haven't changed.",
+    "The theme state causes a re-render, but useMemo only cares about its own dependency array, not what caused the render."
+  ]
+},
+
+// ── Phase 5: EDGE CASES ──
+{
+  id:"edge1", phase:5, type:"spot",
+  title:"Stale cached result",
+  instruction:"This useMemo gives wrong results after the user changes the sort direction. Tap the line with the bug.",
+  lines:[
+    {num:1,code:'function ProductList({ products }) {',bug:false},
+    {num:2,code:'  const [sortDir, setSortDir] = useState("asc");',bug:false},
+    {num:3,code:'',bug:false},
+    {num:4,code:'  const sorted = useMemo(() => {',bug:false},
+    {num:5,code:'    return [...products].sort((a, b) =>',bug:false},
+    {num:6,code:'      sortDir === "asc" ? a.price - b.price : b.price - a.price',bug:false},
+    {num:7,code:'    );',bug:false},
+    {num:8,code:'  }, [products]);  // missing sortDir!',bug:true},
+    {num:9,code:'',bug:false},
+    {num:10,code:'  return sorted.map(p => <Item key={p.id} item={p} />);',bug:false},
+    {num:11,code:'}',bug:false}
+  ],
+  explanation:"Line 8 lists only [products] as a dependency, but the computation also reads sortDir. When the user toggles sort direction, sortDir changes but useMemo thinks nothing changed (products is the same), so it returns the stale cached result sorted the old way.",
+  misconception:"A common mistake is listing only the 'data' dependencies and forgetting that config/filter/sort values used inside the computation are ALSO dependencies. The rule: every reactive value read inside useMemo must be in the dependency array.",
+  fix_code:'<span class="hl-cm">// Fix: include ALL values used inside the computation</span>\n}, [products, <span class="hl-fn">sortDir</span>]);'
+},
+{
+  id:"edge2", phase:5, type:"spot",
+  title:"Premature memoization",
+  instruction:"A code review flags this as 'unnecessary optimization.' Tap the line(s) that represent wasted effort.",
+  lines:[
+    {num:1,code:'function Greeting({ name }) {',bug:false},
+    {num:2,code:'  const message = useMemo(() => {',bug:true},
+    {num:3,code:'    return "Hello, " + name + "!";',bug:true},
+    {num:4,code:'  }, [name]);',bug:true},
+    {num:5,code:'',bug:false},
+    {num:6,code:'  return <h1>{message}</h1>;',bug:false},
+    {num:7,code:'}',bug:false}
+  ],
+  explanation:"String concatenation (\"Hello, \" + name + \"!\") is trivially cheap — far cheaper than the overhead of useMemo itself (storing the previous result, comparing dependencies, managing cache). This memoization costs more than it saves. The golden rule: measure first, memoize second.",
+  misconception:"It's tempting to wrap everything in useMemo 'just in case.' But memoization isn't free — it uses memory for the cache and CPU for dependency comparison. For simple operations, the cure is worse than the disease."
+},
+
+// ── Phase 6: TEACH ──
+{
+  id:"teach1", phase:6, type:"explain",
+  prompt:"A colleague wants to wrap every variable and function in useMemo/useCallback 'for performance.' Explain to them why this is a bad idea and when memoization actually helps.",
+  key_concepts:["overhead cost","memory","measure first","expensive computation","referential stability","React.memo","dependency comparison"],
+  min_words:20,
+  model_answer:"Memoization isn't free. Every useMemo/useCallback has overhead: React must store the previous result in memory and compare dependencies on every render. For cheap operations (string concatenation, simple math, basic JSX), this overhead can actually be more expensive than just recomputing. Memoization pays off in two cases: (1) genuinely expensive computations — sorting large lists, complex calculations — where skipping the work saves real time, and (2) referential stability — when you pass objects/functions to children wrapped in React.memo, stable references prevent unnecessary child re-renders. The rule is: measure first, memoize second. Use React DevTools profiler to find actual bottlenecks before reaching for useMemo."
+},
+
+// ── Phase 7: REAL WORLD ──
+{
+  id:"real1", phase:7, type:"scenario",
+  label:"Performance Bug",
+  situation:"You have a product search page. Users type in a search box, and the product list filters and re-sorts on every keystroke. The sort order hasn't changed — only the search text. But profiling shows the expensive sort runs on every keystroke, causing input lag.",
+  code:'function ProductPage() {\n  const [query, setQuery] = useState("");\n  const [sortBy, setSortBy] = useState("price");\n  const products = useProducts(); // fetched data\n\n  const filtered = products.filter(p =>\n    p.name.toLowerCase().includes(query.toLowerCase())\n  );\n  const sorted = filtered.sort((a, b) =>\n    a[sortBy] - b[sortBy]\n  );\n\n  return (\n    <>\n      <input value={query} onChange={e => setQuery(e.target.value)} />\n      <ProductList items={sorted} />\n    </>\n  );\n}',
+  question:"How would you optimize this?",
+  choices:[
+    {text:"Memoize the sort separately: useMemo for sorted based on [filtered, sortBy], and useMemo for filtered based on [products, query]",correct:true},
+    {text:"Wrap the entire component in React.memo",correct:false},
+    {text:"Use useRef to store the sorted array",correct:false}
+  ],
+  reveal:"Split the work into two useMemo calls: one for filtering (depends on products + query) and one for sorting (depends on the filtered result + sortBy). When the user types, filtering reruns but sorting only reruns if the filtered list actually changed. When sort order changes, only sorting reruns. This separates concerns and minimizes unnecessary work.",
+  why_others:[
+    "React.memo on the parent won't help — the state changes are inside this component, so it re-renders regardless. React.memo prevents re-renders from parent props.",
+    "useRef doesn't trigger re-renders. You need the sorted list to update the UI, so you need a mechanism that causes re-rendering with the new data."
+  ]
+},
+{
+  id:"real2", phase:7, type:"scenario",
+  label:"Wasted Re-renders",
+  situation:"You have a parent component that re-renders at 60fps (it tracks mouse position). It passes an onClick handler to an ExpensiveChart wrapped in React.memo. The chart takes 50ms to render. Despite React.memo, the chart re-renders every frame, causing jank.",
+  code:'function Dashboard() {\n  const [mousePos, setMousePos] = useState({x:0, y:0});\n  const [data, setData] = useState(chartData);\n\n  // This runs on every mouse move\n  const handleChartClick = (point) => {\n    console.log("Clicked:", point);\n    setData(prev => transform(prev, point));\n  };\n\n  return (\n    <div onMouseMove={e => setMousePos({x:e.clientX, y:e.clientY})}>\n      <Cursor pos={mousePos} />\n      <ExpensiveChart data={data} onClick={handleChartClick} />\n    </div>\n  );\n}',
+  question:"Why does React.memo fail to prevent re-renders, and what's the fix?",
+  choices:[
+    {text:"Wrap handleChartClick in useCallback — it creates a new function reference every render, defeating React.memo",correct:true},
+    {text:"Replace React.memo with useMemo on the chart data",correct:false},
+    {text:"Move mousePos to useRef instead of useState",correct:false}
+  ],
+  reveal:"The handleChartClick function is created fresh on every render, producing a new reference each time. React.memo compares props — onClick is a different reference every frame, so the chart re-renders. Fix: const handleChartClick = useCallback((point) => { ... }, []) — now the function reference is stable, and React.memo can skip re-rendering the chart.",
+  why_others:[
+    "The problem is the function reference, not the data. data hasn't changed — but onClick has (it's a new function object each render).",
+    "Using useRef for mousePos would stop the cursor from visually updating, which defeats the purpose of tracking mouse position."
+  ]
+},
+
+// ── Phase 8: CHALLENGE ──
+{
+  id:"chal1", phase:8, type:"fill", difficulty:4,
+  title:"Optimize a dashboard with multiple computations",
+  instruction:"Fill in the blanks to properly memoize this dashboard. The revenue calculation is expensive, and the Chart component is wrapped in React.memo.",
+  template:'<span class="hl-kw">const</span> revenue = <span class="hl-fn">____1____</span>(() =&gt; {\n  <span class="hl-kw">return</span> <span class="hl-fn">calculateRevenue</span>(sales, dateRange);\n}, [____2____, ____3____]);\n\n<span class="hl-kw">const</span> onBarClick = <span class="hl-fn">____4____</span>((bar) =&gt; {\n  <span class="hl-fn">setSelected</span>(bar.id);\n}, [____5____]);\n\n<span class="hl-kw">return</span> &lt;Chart data={revenue} onClick={onBarClick} /&gt;;',
+  blanks:[
+    {id:"1",answer:"useMemo",hint:"cache the computed value",accept:["useMemo"]},
+    {id:"2",answer:"sales",hint:"first dep for revenue",accept:["sales","dateRange"]},
+    {id:"3",answer:"dateRange",hint:"second dep for revenue",accept:["dateRange","sales"]},
+    {id:"4",answer:"useCallback",hint:"cache the function reference",accept:["useCallback"]},
+    {id:"5",answer:"",hint:"what does this callback close over?",accept:["","setSelected"]}
+  ],
+  feedback:"useMemo caches the revenue calculation (recomputes only when sales or dateRange change). useCallback caches the click handler — since setSelected is a stable setter from useState, the dependency array can be empty, keeping the function reference stable for React.memo."
+},
+{
+  id:"chal2", phase:8, type:"predict", difficulty:5,
+  question:"(Interleaved review) Consider this code:\n\nconst [count, setCount] = useState(0);\nconst doubled = useMemo(() => count * 2, [count]);\nconst increment = useCallback(() => setCount(c => c + 1), []);\n\nYou click the button that calls increment(). What happens to 'doubled'?",
+  choices:[
+    {text:"doubled stays the same — useMemo caches it",correct:false},
+    {text:"doubled recomputes because count changed, which is in its dependency array",correct:true},
+    {text:"doubled becomes undefined because increment doesn't reference it",correct:false}
+  ],
+  reveal:"Clicking calls setCount, which changes count. The component re-renders. When React reaches the useMemo, it checks [count] — count has changed from 0 to 1, so React runs () => count * 2 with the new count, producing 2. The useMemo correctly recomputes because its dependency changed. This is the intended behavior — memoization skips work when deps are the same, but correctly updates when they change.",
+  why_others:[
+    "useMemo only returns the cached value when dependencies haven't changed. Here, count changed (0 -> 1), so it recomputes.",
+    "doubled is computed from count via useMemo. It always reflects the current count — it just avoids redundant computation when count stays the same."
+  ]
+},
+
+// ── Phase 8 continued: INTERLEAVED ──
+{
+  id:"interleave1", phase:8, type:"predict",
+  question:"(Interleaved review from useEffect) You have:\n\nuseEffect(() => {\n  fetchData(query);\n}, [query]);\n\nconst cached = useMemo(() => transform(data), [data]);\n\nThe user types a new query. In what order do things happen?",
+  choices:[
+    {text:"useEffect runs first (fetches data), then useMemo transforms it",correct:false},
+    {text:"useMemo runs during render with the current data, then useEffect runs after paint to fetch new data",correct:true},
+    {text:"They run simultaneously",correct:false}
+  ],
+  reveal:"useMemo runs during rendering (synchronous). useEffect runs AFTER the browser paints (asynchronous). So on this render: useMemo transforms the OLD data. Then the screen updates. Then useEffect fires and fetches new data. When the fetch completes and setData is called, ANOTHER render happens where useMemo transforms the NEW data. Understanding this timing is crucial for avoiding subtle bugs.",
+  why_others:[
+    "useEffect always runs after render and paint. useMemo runs during render. They never run in the order 'effect first, memo second' within the same render cycle.",
+    "React is single-threaded. useMemo and useEffect run at different phases of the render lifecycle, not simultaneously."
+  ]
+},
+
+// ── Phase 9: DASHBOARD ──
+{
+  id:"mastery1", phase:9, type:"dashboard"
+}
+];
+
+/* ═══════════════════════════════════════════
+   LEARNING ENGINE
+   ═══════════════════════════════════════════ */
+
+const APP = {
+  step: 0,
+  scores: {},
+  confidence: {},
+  attempts: {},
+  times: {},
+  startTime: Date.now(),
+  stepStart: Date.now(),
+  showDashboard: false,
+  gateOpen: {},
+  mapVisited: {}
+};
+
+function save(){
+  try{
+    localStorage.setItem("useMemo_mastery",JSON.stringify({
+      step:APP.step,scores:APP.scores,confidence:APP.confidence,
+      attempts:APP.attempts,times:APP.times,gateOpen:APP.gateOpen
+    }));
+  }catch(e){}
+}
+function load(){
+  try{
+    const d=JSON.parse(localStorage.getItem("useMemo_mastery"));
+    if(d){Object.assign(APP,d);APP.stepStart=Date.now();}
+  }catch(e){}
+}
+load();
+
+function totalSteps(){return STEPS.length}
+function pct(){return Math.round((APP.step/(totalSteps()-1))*100)}
+function phaseOf(i){return STEPS[i]?PHASES[STEPS[i].phase]:PHASES[0]}
+function isGated(i){
+  const s=STEPS[i];
+  if(!s)return false;
+  return["predict","order","fill","match","spot","recall","explain","scenario"].includes(s.type);
+}
+
+function accuracy(){
+  const ids=Object.keys(APP.scores);
+  if(!ids.length)return 0;
+  return Math.round(ids.reduce((s,k)=>s+APP.scores[k],0)/ids.length*100);
+}
+
+function weakAreas(){
+  const weak=[];
+  Object.keys(APP.scores).forEach(k=>{
+    if(APP.scores[k]<1){
+      const st=STEPS.find(s=>s.id===k);
+      if(st)weak.push({id:k,title:st.title||st.question?.slice(0,40)+"...",score:APP.scores[k]});
+    }
+  });
+  return weak;
+}
+
+/* ═══════════════════════════════════════════
+   RENDERERS
+   ═══════════════════════════════════════════ */
+
+function render(){
+  APP.stepStart=Date.now();
+  const app=document.getElementById("app");
+  const step=STEPS[APP.step];
+  const ph=phaseOf(APP.step);
+
+  app.innerHTML=`
+    <div class="topbar">
+      <a class="back" href="index.html">←</a>
+      <span class="spacer"></span>
+      <span class="pill brand">${ph.icon} ${ph.name}</span>
+      <span class="spacer"></span>
+      <button class="btn sm ghost" onclick="toggleDash()">\u{1F4CA}</button>
     </div>
+    <div class="progress-track"><div class="progress-fill" style="width:${pct()}%"></div></div>
+    <div class="screen-wrap" id="sw"><div class="screen" id="scr"></div></div>
+    <div class="bottombar">
+      <button class="btn sm" onclick="prev()" ${APP.step===0?"disabled":""}>Back</button>
+      <span class="text-xs" style="color:var(--muted);text-align:center;flex:1">${APP.step+1} / ${totalSteps()}</span>
+      <button class="btn sm primary" id="next-btn" onclick="next()" ${canAdvance()?"":isGated(APP.step)?"disabled":""}>
+        ${APP.step>=totalSteps()-1?"Finish":"Next"}
+      </button>
+    </div>`;
 
-    <div class="card">
-      <h3>Try it</h3>
-      <div class="tabs" data-tabs>
-        <button class="tab" data-tab="memo" aria-selected="true">useMemo</button>
-        <button class="tab" data-tab="callback">useCallback</button>
+  const scr=document.getElementById("scr");
+  const R=RENDERERS[step.type];
+  if(R)R(scr,step);
+  else scr.innerHTML=`<div class="card"><div class="card-title">Unknown step type: ${step.type}</div></div>`;
+
+  if(APP.showDashboard)showDashOverlay();
+  save();
+}
+
+function canAdvance(){
+  const s=STEPS[APP.step];
+  return !isGated(APP.step)||APP.gateOpen[s.id];
+}
+
+function unlock(){
+  APP.gateOpen[STEPS[APP.step].id]=true;
+  const nb=document.getElementById("next-btn");
+  if(nb)nb.disabled=false;
+}
+
+function prev(){if(APP.step>0){APP.step--;render();}}
+function next(){if(APP.step<totalSteps()-1&&canAdvance()){APP.step++;render();}}
+
+window.prev=prev;window.next=next;
+
+document.addEventListener("keydown",e=>{
+  if(e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA")return;
+  if(e.key==="ArrowRight"||e.key==="n")next();
+  if(e.key==="ArrowLeft"||e.key==="p")prev();
+  if(e.key==="d")toggleDash();
+});
+
+/* ── Dashboard overlay ── */
+function toggleDash(){
+  APP.showDashboard=!APP.showDashboard;
+  if(APP.showDashboard)showDashOverlay();
+  else{const o=document.querySelector(".dash-overlay");if(o)o.remove();}
+}
+window.toggleDash=toggleDash;
+
+function showDashOverlay(){
+  let o=document.querySelector(".dash-overlay");
+  if(o)o.remove();
+  const elapsed=Math.round((Date.now()-APP.startTime)/1000);
+  const mins=Math.floor(elapsed/60);
+  const secs=elapsed%60;
+  const acc=accuracy();
+  const weak=weakAreas();
+  const completed=Object.keys(APP.scores).length;
+  const total=STEPS.filter(s=>isGated(STEPS.indexOf(s))).length;
+
+  o=document.createElement("div");
+  o.className="dash-overlay";
+  o.onclick=e=>{if(e.target===o)toggleDash();};
+  o.innerHTML=`
+    <div class="dash-panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="dash-title">\u{1F4CA} Mastery Dashboard</div>
+        <button class="btn sm ghost" onclick="toggleDash()">✕</button>
       </div>
 
-      <!-- Scenario A: useMemo -->
-      <div class="panel active" data-panel="memo">
-        <div class="demo" id="demoA">
-          <h4>An "expensive" calculation</h4>
-          <div class="row">
-            <button class="tab" data-memo="on" aria-selected="true">useMemo: on</button>
-            <button class="tab" data-memo="off" aria-selected="false">useMemo: off</button>
-          </div>
-          <div class="row" style="margin-top:12px">
-            <span class="readout">number: <b id="a-num">3</b></span>
-            <button class="btn" id="a-num-btn">change number</button>
-          </div>
-          <div class="row">
-            <span class="readout">theme clicks: <b id="a-other">0</b></span>
-            <button class="btn secondary" id="a-other-btn">unrelated re-render</button>
-          </div>
-          <div class="row">
-            <span class="readout">result: <b id="a-result">…</b></span>
-            <span class="pill bad">computations: <b id="a-calc">0</b></span>
-          </div>
-          <div class="log" id="a-log"></div>
-        </div>
-        <p class="muted" style="font-size:14px">
-          With memo <b>on</b>, the "unrelated re-render" button doesn't recompute (the count stays still).
-          Turn it <b>off</b> and every render redoes the work.
-        </p>
-        <pre><code><span class="tok-key">const</span> result = <span class="tok-fn">useMemo</span>(
-  () =&gt; <span class="tok-fn">slowCalculation</span>(number), <span class="tok-com">// only runs…</span>
-  [number]                       <span class="tok-com">// …when `number` changes</span>
-);</code></pre>
+      <div class="dash-section">
+        <div class="dash-stat"><span class="label">Progress</span><span class="value">${pct()}%</span></div>
+        <div class="meter"><div class="meter-fill brand" style="width:${pct()}%"></div></div>
       </div>
 
-      <!-- Scenario B: useCallback -->
-      <div class="panel" data-panel="callback">
-        <div class="demo" id="demoB">
-          <h4>A stable function for a memoized child</h4>
-          <div class="row">
-            <button class="tab" data-cb="on" aria-selected="true">useCallback: on</button>
-            <button class="tab" data-cb="off" aria-selected="false">useCallback: off</button>
-          </div>
-          <div class="row" style="margin-top:12px">
-            <button class="btn" id="b-render">Re-render parent</button>
-          </div>
-          <div class="row">
-            <span class="readout">Parent renders: <b id="b-parent">1</b></span>
-          </div>
-          <div class="row">
-            <span class="readout">&lt;Child&gt; renders: <b id="b-child">1</b></span>
-            <span class="pill" id="b-status">child is stable</span>
-          </div>
-          <div class="log" id="b-log"></div>
-        </div>
-        <div class="note">
-          A child wrapped in <code>React.memo</code> skips re-rendering when its props are unchanged.
-          But a function created fresh each render is a <i>new</i> prop every time —
-          <code>useCallback</code> keeps the same function so the child can safely skip.
-        </div>
-        <pre><code><span class="tok-key">const</span> handleClick = <span class="tok-fn">useCallback</span>(() =&gt; { … }, []);
-<span class="tok-com">// Child is React.memo(...) → only re-renders if handleClick changes</span>
-&lt;Child onClick={handleClick} /&gt;</code></pre>
+      <div class="dash-section">
+        <div class="dash-stat"><span class="label">Accuracy</span><span class="value ${acc>=80?"green":acc>=50?"amber":"red"}">${acc}%</span></div>
+        <div class="meter"><div class="meter-fill ${acc>=80?"green":acc>=50?"amber":"red"}" style="width:${acc}%"></div></div>
       </div>
-    </div>
 
-    <div class="card">
-      <h3>Good to remember</h3>
-      <ul class="clean">
-        <li><b><code>useMemo</code> returns a value; <code>useCallback</code> returns a function.</b> In fact <code>useCallback(fn, d)</code> is just <code>useMemo(() =&gt; fn, d)</code>.</li>
-        <li>They're a <b>cache</b>, not a guarantee — React may still recompute. Never rely on them for correctness, only speed.</li>
-        <li>Get the <b>dependency array</b> right, same as <code>useEffect</code>. Missing deps → stale results.</li>
-        <li>Premature use adds complexity for no gain. Measure first.</li>
-      </ul>
-    </div>
+      <div class="dash-section">
+        <div class="dash-stat"><span class="label">Questions answered</span><span class="value">${completed} / ${total}</span></div>
+        <div class="dash-stat"><span class="label">Time spent</span><span class="value">${mins}m ${secs}s</span></div>
+        <div class="dash-stat"><span class="label">Current phase</span><span class="value">${phaseOf(APP.step).name}</span></div>
+      </div>
 
-    <nav class="pager">
-      <a href="usereducer.html"><span class="dir">← Prev</span><span class="ttl">useReducer</span></a>
-      <a class="next disabled" href="#"><span class="dir">Done 🎉</span><span class="ttl">—</span></a>
-    </nav>
-    <p class="footer"><a href="index.html">↑ All hooks</a></p>
-  </main>
+      ${weak.length?`
+      <div class="dash-section">
+        <div style="font-size:14px;font-weight:600;color:var(--amber);margin-bottom:8px">⚠ Needs reinforcement</div>
+        <ul class="weak-list">
+          ${weak.map(w=>`<li class="weak-item"><span>${w.title}</span><span class="pill red">${Math.round(w.score*100)}%</span></li>`).join("")}
+        </ul>
+      </div>`:""}
 
-  <script src="app.js"></script>
-  <script>
-    // ---------- Scenario A: useMemo ----------
-    (function () {
-      const log = makeLogger(document.getElementById("a-log"));
-      let num = 3, other = 0, memoOn = true;
-      let calcs = 0;
-      let cache = { num: null, result: null };
+      <div class="dash-section">
+        <div style="font-size:14px;font-weight:600;margin-bottom:8px">Phase progress</div>
+        ${PHASES.slice(0,-1).map((ph,i)=>{
+          const stepsInPhase=STEPS.filter(s=>s.phase===i);
+          const doneInPhase=stepsInPhase.filter(s=>APP.gateOpen[s.id]||!isGated(STEPS.indexOf(s))).length;
+          const phPct=stepsInPhase.length?Math.round(doneInPhase/stepsInPhase.length*100):0;
+          return`<div class="dash-stat"><span class="label">${ph.icon} ${ph.name}</span><span class="value">${phPct}%</span></div>`;
+        }).join("")}
+      </div>
 
-      // pretend-expensive calculation
-      function slowCalculation(n) {
-        calcs++;
-        let total = 0;
-        for (let i = 1; i <= n; i++) total += i * i;
-        return total;
-      }
+      <button class="btn w-full" onclick="resetProgress()" style="margin-top:8px">\u{1F504} Reset progress</button>
+    </div>`;
+  document.getElementById("app").appendChild(o);
+}
 
-      function getResult() {
-        if (memoOn && cache.num === num) {
-          log.add("useMemo: cached (number unchanged) → skipped work", "ok");
-          return cache.result;
-        }
-        const r = slowCalculation(num);
-        cache = { num, result: r };
-        log.add("computed slowCalculation(" + num + ") = " + r, "err");
-        return r;
-      }
+function resetProgress(){
+  if(confirm("Reset all progress?")){
+    APP.step=0;APP.scores={};APP.confidence={};APP.attempts={};APP.times={};APP.gateOpen={};APP.mapVisited={};
+    APP.showDashboard=false;
+    localStorage.removeItem("useMemo_mastery");
+    render();
+  }
+}
+window.resetProgress=resetProgress;
 
-      function render(reason) {
-        log.add("render · " + reason, "warn");
-        const r = getResult();
-        document.getElementById("a-num").textContent = num;
-        document.getElementById("a-other").textContent = other;
-        document.getElementById("a-result").textContent = r;
-        document.getElementById("a-calc").textContent = calcs;
-        flash(document.getElementById("demoA"));
-      }
+/* ═══════════════════════════════════════════
+   SCREEN TYPE RENDERERS
+   ═══════════════════════════════════════════ */
 
-      document.getElementById("a-num-btn").onclick = () => { num++; render("number changed"); };
-      document.getElementById("a-other-btn").onclick = () => { other++; render("unrelated state changed"); };
+const RENDERERS={
 
-      document.querySelectorAll("[data-memo]").forEach((b) => {
-        b.onclick = () => {
-          memoOn = b.getAttribute("data-memo") === "on";
-          document.querySelectorAll("[data-memo]").forEach((x) =>
-            x.setAttribute("aria-selected", x === b ? "true" : "false"));
-          cache = { num: null, result: null }; // reset cache on mode change
-          log.add("— useMemo " + (memoOn ? "ON" : "OFF") + " —", "warn");
-          render("mode changed");
-        };
+/* ── Concept Map ── */
+map(el,step){
+  let html=`<div class="card-header">${step.subtitle}</div>
+    <div class="card-title">${step.title}</div>
+    <div class="concept-map" id="cmap" style="min-height:380px">`;
+  step.nodes.forEach(n=>{
+    const visited=APP.mapVisited[n.id];
+    html+=`<div class="map-node ${visited?"active":""}" style="left:${n.x}%;top:${n.y}%;transform:translate(-50%,-50%)" data-node="${n.id}">
+      <span class="icon">${n.icon}</span>
+      <span class="label">${n.label}</span>
+    </div>`;
+  });
+  html+=`</div><div id="map-desc"></div>`;
+  const allVisited=step.nodes.every(n=>APP.mapVisited[n.id]);
+  if(!allVisited)html+=`<div class="pill amber mt-sm">Tap all ${step.nodes.length} nodes to continue</div>`;
+  el.innerHTML=html;
+
+  const cmap=document.getElementById("cmap");
+  drawMapLines(cmap,step);
+
+  cmap.querySelectorAll(".map-node").forEach(nd=>{
+    nd.onclick=()=>{
+      const nid=nd.dataset.node;
+      APP.mapVisited[nid]=true;
+      nd.classList.add("active");
+      const info=step.nodes.find(n=>n.id===nid);
+      document.getElementById("map-desc").innerHTML=`<div class="map-desc"><b>${info.label}:</b> ${info.desc}</div>`;
+      if(step.nodes.every(n=>APP.mapVisited[n.id]))unlock();
+      save();
+    };
+  });
+  if(allVisited)unlock();
+},
+
+/* ── Prediction / Multiple Choice ── */
+predict(el,step){
+  let answered=APP.scores[step.id]!==undefined;
+  let html=`<div class="card-header">${step.difficulty>=4?"\u{1F525} Challenge":"Predict"}</div>
+    <div class="card-title" style="font-size:16px;line-height:1.5;font-weight:500;white-space:pre-line">${esc(step.question)}</div>`;
+  if(step.code)html+=`<pre style="margin:12px 0"><code>${step.code}</code></pre>`;
+  html+=`<div class="choices" id="choices">`;
+  step.choices.forEach((c,i)=>{
+    const cls=answered?(c.correct?"correct":(APP.attempts[step.id]===i?"wrong":"")):"";
+    html+=`<div class="choice ${cls}" data-i="${i}">${c.text}</div>`;
+  });
+  html+=`</div><div id="fb"></div>`;
+  el.innerHTML=html;
+
+  if(answered){
+    showPredictFeedback(step);
+    return;
+  }
+
+  document.querySelectorAll("#choices .choice").forEach(ch=>{
+    ch.onclick=()=>{
+      const i=parseInt(ch.dataset.i);
+      const correct=step.choices[i].correct;
+      APP.scores[step.id]=correct?1:0;
+      APP.attempts[step.id]=i;
+      APP.times[step.id]=Date.now()-APP.stepStart;
+
+      document.querySelectorAll("#choices .choice").forEach((c,j)=>{
+        c.classList.add(step.choices[j].correct?"correct":(j===i?"wrong":""));
+        c.onclick=null;
       });
+      showPredictFeedback(step);
+      unlock();
+      save();
+    };
+  });
+},
 
-      render("initial mount");
-    })();
+/* ── Info (tiny chunk) ── */
+info(el,step){
+  let html=`<div class="card-header">Learn</div><div class="card-title">${step.title}</div>`;
+  if(step.visual==="code"&&step.code){
+    html+=`<pre style="margin:10px 0"><code>${step.code}</code></pre>`;
+  }
+  if(step.visual==="flow"&&step.flow_steps){
+    html+=`<div class="flex-col gap-sm" style="margin:12px 0">`;
+    step.flow_steps.forEach((s,i)=>{
+      html+=`<div class="flex-row gap-sm" style="animation:fadeUp .3s var(--ease) ${i*0.06}s both">
+        <span class="pill brand" style="min-width:28px;justify-content:center">${i+1}</span>
+        <span style="font-size:14px">${s}</span>
+      </div>`;
+      if(i<step.flow_steps.length-1)html+=`<div style="margin-left:13px;width:2px;height:8px;background:var(--line)"></div>`;
+    });
+    html+=`</div>`;
+  }
+  if(step.points){
+    html+=`<div class="flex-col gap-sm" style="margin:10px 0">`;
+    step.points.forEach(p=>{html+=`<div style="font-size:14px;color:var(--muted);padding-left:12px;border-left:2px solid var(--line)">${p}</div>`;});
+    html+=`</div>`;
+  }
+  if(step.key_idea){
+    html+=`<div class="feedback info mt-md"><b>Key idea:</b> ${step.key_idea}</div>`;
+  }
+  el.innerHTML=html;
+},
 
-    // ---------- Scenario B: useCallback ----------
-    (function () {
-      const log = makeLogger(document.getElementById("b-log"));
-      let cbOn = true;
-      let parentRenders = 1, childRenders = 1;
-      const stableFn = function handler() {}; // what useCallback "remembers"
-      let lastFn = stableFn;                  // identity passed to child last time
+/* ── Drag to Order ── */
+order(el,step){
+  const answered=APP.scores[step.id]!==undefined;
+  let order=answered?step.correct_order.slice():shuffle(step.items.map(i=>i.id));
 
-      function render() {
-        parentRenders++;
-        // With useCallback ON the same function is reused; OFF makes a new one.
-        const newFn = cbOn ? stableFn : function handler() {};
-        const changed = newFn !== lastFn;
-        lastFn = newFn;
+  let html=`<div class="card-header">Build</div><div class="card-title">${step.title}</div>
+    <div class="card-text">${step.instruction}</div>
+    <div class="drag-zone" id="dzone"></div>
+    ${!answered?'<button class="btn primary w-full mt-md" id="check-order">Check order</button>':''}
+    <div id="fb"></div>`;
+  el.innerHTML=html;
 
-        document.getElementById("b-parent").textContent = parentRenders;
+  renderOrder(step,order,answered);
 
-        // React.memo child re-renders only if its prop (the function) changed
-        if (changed) {
-          childRenders++;
-          log.add("parent re-rendered → new function → <Child> re-renders", "err");
-        } else {
-          log.add("parent re-rendered → same function → <Child> SKIPPED", "ok");
-        }
-        document.getElementById("b-child").textContent = childRenders;
+  if(!answered){
+    initDragOrder(step,order);
+    document.getElementById("check-order").onclick=()=>{
+      const correct=order.every((id,i)=>id===step.correct_order[i]);
+      APP.scores[step.id]=correct?1:0;
+      APP.times[step.id]=Date.now()-APP.stepStart;
+      renderOrder(step,order,true);
+      document.getElementById("check-order").remove();
+      document.getElementById("fb").innerHTML=`
+        <div class="feedback ${correct?"good":"bad"} mt-md">
+          <b>${correct?"Correct!":"Not quite right."}</b>
+          <div class="why">${step.feedback}</div>
+        </div>`;
+      unlock();save();
+    };
+  }else{
+    document.getElementById("fb").innerHTML=`<div class="feedback ${APP.scores[step.id]?"good":"info"} mt-md"><div class="why">${step.feedback}</div></div>`;
+  }
+},
 
-        const status = document.getElementById("b-status");
-        status.textContent = cbOn ? "child stays stable" : "child re-renders each time";
-        status.className = "pill " + (cbOn ? "good" : "bad");
-        flash(document.getElementById("demoB"));
-      }
+/* ── Code Fill ── */
+fill(el,step){
+  const answered=APP.scores[step.id]!==undefined;
+  let tpl=step.template;
+  step.blanks.forEach(b=>{
+    const val=answered?(b.answer):"";
+    const cls=answered?"correct":"";
+    tpl=tpl.replace(`____${b.id}____`,`<input type="text" class="code-fill-input ${cls}" data-blank="${b.id}" placeholder="${b.hint}" value="${esc(val)}" style="width:${Math.max(b.answer.length*9,70)}px" ${answered?"readonly":""}>`);
+  });
+  let html=`<div class="card-header">${step.difficulty>=4?"\u{1F525} Challenge":"Build"}</div>
+    <div class="card-title">${step.title}</div>
+    <div class="card-text">${step.instruction}</div>
+    <pre class="code-fill" style="margin:12px 0"><code>${tpl}</code></pre>
+    ${!answered?'<button class="btn primary w-full" id="check-fill">Check</button>':''}
+    <div id="fb"></div>`;
+  el.innerHTML=html;
 
-      document.getElementById("b-render").onclick = render;
+  if(answered){
+    document.getElementById("fb").innerHTML=`<div class="feedback good mt-md"><div class="why">${step.feedback}</div></div>`;
+    return;
+  }
 
-      document.querySelectorAll("[data-cb]").forEach((b) => {
-        b.onclick = () => {
-          cbOn = b.getAttribute("data-cb") === "on";
-          document.querySelectorAll("[data-cb]").forEach((x) =>
-            x.setAttribute("aria-selected", x === b ? "true" : "false"));
-          lastFn = cbOn ? stableFn : null; // reset baseline for the new mode
-          log.add("— useCallback " + (cbOn ? "ON" : "OFF") + " —", "warn");
-        };
+  document.getElementById("check-fill").onclick=()=>{
+    let allCorrect=true;
+    step.blanks.forEach(b=>{
+      const inp=document.querySelector(`[data-blank="${b.id}"]`);
+      const val=inp.value.trim();
+      const ok=b.accept.some(a=>a.toLowerCase()===val.toLowerCase());
+      inp.classList.add(ok?"correct":"wrong");
+      inp.readOnly=true;
+      if(!ok)allCorrect=false;
+    });
+    APP.scores[step.id]=allCorrect?1:0.5;
+    APP.times[step.id]=Date.now()-APP.stepStart;
+    document.getElementById("check-fill").remove();
+    document.getElementById("fb").innerHTML=`
+      <div class="feedback ${allCorrect?"good":"bad"} mt-md">
+        <b>${allCorrect?"All correct!":"Some blanks need fixing."}</b>
+        <div class="why">${step.feedback}</div>
+      </div>`;
+    unlock();save();
+  };
+},
+
+/* ── Match ── */
+match(el,step){
+  const answered=APP.scores[step.id]!==undefined;
+  let selected={left:null,right:null};
+  let matched=answered?step.pairs.map(p=>({l:p[0],r:p[1]})):[];
+
+  let html=`<div class="card-header">Build</div><div class="card-title">${step.title}</div>
+    <div class="card-text">${step.instruction}</div>
+    <div class="match-grid" id="mgrid"></div>
+    <div id="fb"></div>`;
+  el.innerHTML=html;
+
+  renderMatch(step,matched,selected,answered);
+
+  if(answered){
+    document.getElementById("fb").innerHTML=`<div class="feedback good mt-md"><div class="why">${step.feedback}</div></div>`;
+  }
+},
+
+/* ── Spot the Bug ── */
+spot(el,step){
+  const answered=APP.scores[step.id]!==undefined;
+  let html=`<div class="card-header">⚠ Edge Case</div><div class="card-title">${step.title}</div>
+    <div class="card-text">${step.instruction}</div>
+    <ul class="code-lines" id="clines">`;
+  step.lines.forEach(l=>{
+    const cls=answered?(l.bug?"correct-line":(APP.attempts[step.id]?.includes(l.num)?"wrong-line":"")):"";
+    html+=`<li class="code-line ${cls}" data-num="${l.num}" ${l.code?"":'style="height:12px"'}><span class="ln">${l.num}</span><span>${colorize(l.code)}</span></li>`;
+  });
+  html+=`</ul>`;
+  if(!answered)html+=`<button class="btn primary w-full mt-md" id="check-spot">Check selection</button>`;
+  html+=`<div id="fb"></div>`;
+  el.innerHTML=html;
+
+  if(answered){
+    showSpotFeedback(step);
+    return;
+  }
+
+  let selectedLines=new Set();
+  document.querySelectorAll("#clines .code-line").forEach(ln=>{
+    if(!ln.textContent.trim())return;
+    ln.onclick=()=>{
+      const num=parseInt(ln.dataset.num);
+      if(selectedLines.has(num)){selectedLines.delete(num);ln.classList.remove("selected");}
+      else{selectedLines.add(num);ln.classList.add("selected");}
+    };
+  });
+
+  document.getElementById("check-spot").onclick=()=>{
+    const bugLines=step.lines.filter(l=>l.bug).map(l=>l.num);
+    const correct=bugLines.every(n=>selectedLines.has(n))&&[...selectedLines].every(n=>bugLines.includes(n));
+    APP.scores[step.id]=correct?1:(selectedLines.size>0?0.3:0);
+    APP.attempts[step.id]=[...selectedLines];
+    APP.times[step.id]=Date.now()-APP.stepStart;
+
+    document.querySelectorAll("#clines .code-line").forEach(ln=>{
+      const num=parseInt(ln.dataset.num);
+      const isBug=bugLines.includes(num);
+      ln.classList.remove("selected");
+      if(isBug)ln.classList.add("correct-line");
+      else if(selectedLines.has(num))ln.classList.add("wrong-line");
+      ln.onclick=null;
+    });
+    document.getElementById("check-spot").remove();
+    showSpotFeedback(step);
+    unlock();save();
+  };
+},
+
+/* ── Recall ── */
+recall(el,step){
+  const answered=APP.scores[step.id]!==undefined;
+  let html=`<div class="card-header">\u{1F9E0} Retrieval Practice</div>
+    <div class="card-title" style="font-size:17px;font-weight:500">${step.question}</div>
+    <textarea id="recall-input" placeholder="Type your answer from memory…" ${answered?"readonly":""}>${answered?(APP.attempts[step.id]||""):""}</textarea>
+    ${!answered?'<button class="btn primary w-full mt-md" id="check-recall">Check</button>':''}
+    <div id="fb"></div>`;
+  el.innerHTML=html;
+
+  if(answered){
+    showRecallFeedback(step);
+    return;
+  }
+
+  document.getElementById("check-recall").onclick=()=>{
+    const val=document.getElementById("recall-input").value.trim().toLowerCase();
+    if(!val)return;
+    const hits=step.accept_patterns.filter(p=>val.includes(p));
+    const score=Math.min(hits.length/step.key_concepts.length,1);
+    APP.scores[step.id]=score;
+    APP.attempts[step.id]=val;
+    APP.times[step.id]=Date.now()-APP.stepStart;
+    document.getElementById("recall-input").readOnly=true;
+    document.getElementById("check-recall").remove();
+    showRecallFeedback(step);
+    unlock();save();
+  };
+},
+
+/* ── Explain ── */
+explain(el,step){
+  const answered=APP.scores[step.id]!==undefined;
+  let html=`<div class="card-header">\u{1F4AC} Teach It</div>
+    <div class="card-title" style="font-size:17px;font-weight:500">${step.prompt}</div>
+    <textarea id="explain-input" placeholder="Write your explanation…" rows="5" ${answered?"readonly":""}>${answered?(APP.attempts[step.id]||""):""}</textarea>
+    ${!answered?'<button class="btn primary w-full mt-md" id="check-explain">Submit</button>':''}
+    <div id="fb"></div>`;
+  el.innerHTML=html;
+
+  if(answered){
+    showExplainFeedback(step);
+    return;
+  }
+
+  document.getElementById("check-explain").onclick=()=>{
+    const val=document.getElementById("explain-input").value.trim();
+    if(val.split(/\s+/).length<(step.min_words||10)){
+      document.getElementById("fb").innerHTML=`<div class="feedback bad mt-md">Please write at least ${step.min_words||10} words.</div>`;
+      return;
+    }
+    const lower=val.toLowerCase();
+    const found=step.key_concepts.filter(k=>k.split(" ").some(w=>lower.includes(w.toLowerCase())));
+    const score=Math.min(found.length/step.key_concepts.length,1);
+    APP.scores[step.id]=score;
+    APP.attempts[step.id]=val;
+    APP.times[step.id]=Date.now()-APP.stepStart;
+    document.getElementById("explain-input").readOnly=true;
+    document.getElementById("check-explain").remove();
+    showExplainFeedback(step);
+    unlock();save();
+  };
+},
+
+/* ── Real World Scenario ── */
+scenario(el,step){
+  let answered=APP.scores[step.id]!==undefined;
+  let html=`<div class="scenario">
+    <div class="scenario-label">${step.label}</div>
+    <div class="scenario-text">${step.situation}</div>
+  </div>`;
+  if(step.code)html+=`<pre style="margin:10px 0;font-size:12px"><code>${colorize(step.code)}</code></pre>`;
+  html+=`<div class="card-title" style="font-size:16px;margin-top:12px">${step.question}</div>
+    <div class="choices" id="choices">`;
+  step.choices.forEach((c,i)=>{
+    const cls=answered?(c.correct?"correct":(APP.attempts[step.id]===i?"wrong":"")):"";
+    html+=`<div class="choice ${cls}" data-i="${i}">${c.text}</div>`;
+  });
+  html+=`</div><div id="fb"></div>`;
+  el.innerHTML=html;
+
+  if(answered){showPredictFeedback(step);return;}
+
+  document.querySelectorAll("#choices .choice").forEach(ch=>{
+    ch.onclick=()=>{
+      const i=parseInt(ch.dataset.i);
+      const correct=step.choices[i].correct;
+      APP.scores[step.id]=correct?1:0;
+      APP.attempts[step.id]=i;
+      APP.times[step.id]=Date.now()-APP.stepStart;
+      document.querySelectorAll("#choices .choice").forEach((c,j)=>{
+        c.classList.add(step.choices[j].correct?"correct":(j===i?"wrong":""));
+        c.onclick=null;
       });
+      showPredictFeedback(step);
+      unlock();save();
+    };
+  });
+},
 
-      log.add("tap 'Re-render parent' a few times in each mode", "warn");
-    })();
-  </script>
+/* ── Dashboard (final screen) ── */
+dashboard(el,step){
+  const acc=accuracy();
+  const elapsed=Math.round((Date.now()-APP.startTime)/1000);
+  const mins=Math.floor(elapsed/60);
+  const weak=weakAreas();
+  const completed=Object.keys(APP.scores).length;
+  const total=STEPS.filter((_,i)=>isGated(i)).length;
+  const mastery=Math.round((acc*0.6+pct()*0.4));
+
+  let html=`<div class="text-center">
+    <div style="font-size:48px;margin-bottom:8px">${mastery>=80?"\u{1F3C6}":mastery>=50?"\u{1F4AA}":"\u{1F331}"}</div>
+    <div class="card-title" style="font-size:24px">useMemo & useCallback Mastery</div>
+    <div class="pill ${mastery>=80?"green":mastery>=50?"amber":"red"}" style="font-size:16px;padding:6px 16px;margin-top:8px">${mastery}%</div>
+  </div>
+
+  <div class="card mt-md">
+    <div class="dash-stat"><span class="label">Accuracy</span><span class="value ${acc>=80?"green":acc>=50?"amber":"red"}">${acc}%</span></div>
+    <div class="meter"><div class="meter-fill ${acc>=80?"green":acc>=50?"amber":"red"}" style="width:${acc}%"></div></div>
+    <div class="dash-stat mt-sm"><span class="label">Completion</span><span class="value">${pct()}%</span></div>
+    <div class="meter"><div class="meter-fill brand" style="width:${pct()}%"></div></div>
+    <div class="dash-stat mt-sm"><span class="label">Questions</span><span class="value">${completed} / ${total}</span></div>
+    <div class="dash-stat"><span class="label">Time</span><span class="value">${mins}m</span></div>
+  </div>
+
+  <div class="feedback info mt-md">
+    <b>Remember:</b> Measure first, memoize second. useMemo and useCallback are optimization tools, not defaults. Profile with React DevTools before reaching for them.
+  </div>
+
+  ${weak.length?`<div class="card mt-md">
+    <div style="font-weight:600;color:var(--amber);margin-bottom:8px">⚠ Review these areas</div>
+    <ul class="weak-list">${weak.map(w=>`<li class="weak-item"><span>${w.title}</span><span class="pill red">${Math.round(w.score*100)}%</span></li>`).join("")}</ul>
+    <button class="btn w-full mt-md" onclick="APP.step=0;render();">\u{1F504} Restart from beginning</button>
+  </div>`:`<div class="feedback good mt-md"><b>Excellent work!</b> You've demonstrated strong understanding of useMemo and useCallback.</div>`}
+
+  <a href="index.html" class="btn primary w-full mt-md">← Back to all hooks</a>`;
+  el.innerHTML=html;
+  unlock();
+}
+
+};
+
+/* ═══════════════════════════════════════════
+   HELPER FUNCTIONS
+   ═══════════════════════════════════════════ */
+
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+
+function colorize(code){
+  return code
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/(const|let|var|function|return|if|else|switch|case|default|new|typeof|import|export|from|async|await)\b/g,'<span class="hl-kw">$1</span>')
+    .replace(/\b(useState|useEffect|useRef|useContext|useReducer|useMemo|useCallback|fetch|console|setInterval|clearInterval|JSON|Object|Array|React)\b/g,'<span class="hl-fn">$1</span>')
+    .replace(/(["'`])(?:(?!\1).)*?\1/g,'<span class="hl-str">$&</span>')
+    .replace(/\b(\d+)\b/g,'<span class="hl-num">$1</span>')
+    .replace(/(\/\/.*)/g,'<span class="hl-cm">$1</span>');
+}
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  if(a.every((v,i)=>v===arr[i]))return shuffle(a);
+  return a;
+}
+
+function showPredictFeedback(step){
+  const fb=document.getElementById("fb");
+  if(!fb)return;
+  const correct=APP.scores[step.id]===1;
+  let html=`<div class="feedback ${correct?"good":"bad"} mt-md">
+    <b>${correct?"Correct!":"Not quite."}</b>
+    <div class="why">${step.reveal}</div>
+  </div>`;
+  if(step.why_others&&!correct){
+    html+=`<div class="feedback info mt-sm"><b>Why the other options fail:</b>
+      <ul style="margin:6px 0 0;padding-left:18px;font-size:13px">
+        ${step.why_others.map(w=>`<li style="margin:4px 0">${w}</li>`).join("")}
+      </ul></div>`;
+  }
+  if(step.fix_code){
+    html+=`<div class="mt-sm"><div class="text-xs" style="color:var(--muted);margin-bottom:4px">The fix:</div><pre><code>${step.fix_code}</code></pre></div>`;
+  }
+  fb.innerHTML=html;
+}
+
+function showSpotFeedback(step){
+  const fb=document.getElementById("fb");
+  if(!fb)return;
+  const correct=APP.scores[step.id]===1;
+  let html=`<div class="feedback ${correct?"good":"bad"} mt-md">
+    <b>${correct?"You found it!":"Not quite."}</b>
+    <div class="why">${step.explanation}</div>
+  </div>`;
+  if(step.misconception){
+    html+=`<div class="feedback info mt-sm"><b>Common misconception:</b> <span class="why">${step.misconception}</span></div>`;
+  }
+  if(step.fix_code){
+    html+=`<div class="mt-sm"><div class="text-xs" style="color:var(--muted);margin-bottom:4px">The fix:</div><pre><code>${step.fix_code}</code></pre></div>`;
+  }
+  fb.innerHTML=html;
+}
+
+function showRecallFeedback(step){
+  const fb=document.getElementById("fb");
+  if(!fb)return;
+  const score=APP.scores[step.id];
+  const lower=(APP.attempts[step.id]||"").toLowerCase();
+  const found=step.key_concepts.filter(k=>k.split(" ").some(w=>lower.includes(w.toLowerCase())));
+  const missing=step.key_concepts.filter(k=>!found.includes(k));
+
+  let html=`<div class="feedback ${score>=0.8?"good":score>=0.5?"info":"bad"} mt-md">
+    <b>${score>=0.8?"Great recall!":score>=0.5?"Partial recall":"Key concepts missing"}</b>
+    <div class="why">${step.feedback}</div>
+  </div>
+  <div class="mt-sm"><div class="text-xs" style="color:var(--muted);margin-bottom:4px">Key concepts:</div>
+  <div class="key-concepts">
+    ${step.key_concepts.map(k=>`<span class="kc ${found.includes(k)?"found":"missing"}">${k}</span>`).join("")}
+  </div></div>`;
+  fb.innerHTML=html;
+}
+
+function showExplainFeedback(step){
+  const fb=document.getElementById("fb");
+  if(!fb)return;
+  const score=APP.scores[step.id];
+  const lower=(APP.attempts[step.id]||"").toLowerCase();
+  const found=step.key_concepts.filter(k=>k.split(" ").some(w=>lower.includes(w.toLowerCase())));
+  const missing=step.key_concepts.filter(k=>!found.includes(k));
+
+  let html=`<div class="feedback ${score>=0.8?"good":score>=0.5?"info":"bad"} mt-md">
+    <b>${score>=0.8?"Excellent explanation!":score>=0.5?"Good start, but some ideas are missing":"Key ideas missing"}</b>
+  </div>
+  <div class="key-concepts mt-sm">
+    ${step.key_concepts.map(k=>`<span class="kc ${found.includes(k)?"found":"missing"}">${found.includes(k)?"✓":"?"} ${k}</span>`).join("")}
+  </div>`;
+  if(step.model_answer){
+    html+=`<div class="feedback info mt-sm"><b>Model answer:</b> <span class="why">${step.model_answer}</span></div>`;
+  }
+  fb.innerHTML=html;
+}
+
+/* ── Drag to Order ── */
+function renderOrder(step,order,done){
+  const zone=document.getElementById("dzone");
+  zone.innerHTML="";
+  order.forEach((id,i)=>{
+    const item=step.items.find(x=>x.id===id);
+    const d=document.createElement("div");
+    d.className="drag-item"+(done?(id===step.correct_order[i]?" correct":" wrong"):"");
+    d.dataset.id=id;
+    d.dataset.idx=i;
+    d.innerHTML=`<span class="handle">☰</span><span class="pill brand" style="min-width:24px;justify-content:center">${i+1}</span><span>${item.text}</span>`;
+    zone.appendChild(d);
+  });
+}
+
+function initDragOrder(step,order){
+  const zone=document.getElementById("dzone");
+  let dragIdx=null;
+
+  zone.addEventListener("pointerdown",e=>{
+    const item=e.target.closest(".drag-item");
+    if(!item)return;
+    dragIdx=parseInt(item.dataset.idx);
+    item.classList.add("dragging");
+    item.setPointerCapture(e.pointerId);
+  });
+
+  zone.addEventListener("pointermove",e=>{
+    if(dragIdx===null)return;
+    const items=[...zone.querySelectorAll(".drag-item")];
+    const rects=items.map(i=>i.getBoundingClientRect());
+    items.forEach((item,i)=>{
+      item.classList.toggle("over",i!==dragIdx&&e.clientY>=rects[i].top&&e.clientY<=rects[i].bottom);
+    });
+  });
+
+  zone.addEventListener("pointerup",e=>{
+    if(dragIdx===null)return;
+    const items=[...zone.querySelectorAll(".drag-item")];
+    const rects=items.map(i=>i.getBoundingClientRect());
+    let dropIdx=dragIdx;
+    rects.forEach((r,i)=>{
+      if(i!==dragIdx&&e.clientY>=r.top&&e.clientY<=r.bottom)dropIdx=i;
+    });
+    if(dropIdx!==dragIdx){
+      const [moved]=order.splice(dragIdx,1);
+      order.splice(dropIdx,0,moved);
+    }
+    items.forEach(i=>{i.classList.remove("dragging","over");});
+    dragIdx=null;
+    renderOrder(step,order,false);
+    initDragOrder(step,order);
+  });
+}
+
+/* ── Match ── */
+function renderMatch(step,matched,selected,done){
+  const grid=document.getElementById("mgrid");
+  grid.innerHTML="";
+
+  const col1=document.createElement("div");
+  col1.className="flex-col gap-sm";
+  const col2=document.createElement("div");
+  col2.className="flex-col gap-sm";
+
+  step.left.forEach(l=>{
+    const isMatched=matched.some(m=>m.l===l.id);
+    const d=document.createElement("div");
+    d.className="match-item"+(isMatched?" matched correct":"")+(selected.left===l.id?" selected":"");
+    d.textContent=l.text;
+    d.dataset.side="left";
+    d.dataset.id=l.id;
+    if(!done&&!isMatched)d.onclick=()=>handleMatchClick("left",l.id,step,matched,selected,done);
+    col1.appendChild(d);
+  });
+  step.right.forEach(r=>{
+    const isMatched=matched.some(m=>m.r===r.id);
+    const d=document.createElement("div");
+    d.className="match-item"+(isMatched?" matched correct":"")+(selected.right===r.id?" selected":"");
+    d.textContent=r.text;
+    d.dataset.side="right";
+    d.dataset.id=r.id;
+    if(!done&&!isMatched)d.onclick=()=>handleMatchClick("right",r.id,step,matched,selected,done);
+    col2.appendChild(d);
+  });
+  grid.appendChild(col1);
+  grid.appendChild(col2);
+}
+
+function handleMatchClick(side,id,step,matched,selected,done){
+  selected[side]=id;
+  if(selected.left&&selected.right){
+    const isCorrectPair=step.pairs.some(p=>p[0]===selected.left&&p[1]===selected.right);
+    if(isCorrectPair){
+      matched.push({l:selected.left,r:selected.right});
+      if(matched.length===step.pairs.length){
+        APP.scores[step.id]=1;
+        APP.times[step.id]=Date.now()-APP.stepStart;
+        document.getElementById("fb").innerHTML=`<div class="feedback good mt-md"><b>All matched!</b><div class="why">${step.feedback}</div></div>`;
+        unlock();save();
+        renderMatch(step,matched,{left:null,right:null},true);
+        return;
+      }
+    }else{
+      const items=document.querySelectorAll(".match-item.selected");
+      items.forEach(i=>{i.classList.add("wrong");});
+      setTimeout(()=>{items.forEach(i=>{i.classList.remove("wrong","selected");});},500);
+    }
+    selected.left=null;selected.right=null;
+  }
+  renderMatch(step,matched,selected,done);
+}
+
+/* ── Concept Map Lines (SVG-based) ── */
+function drawMapLines(container,step){
+  const update=()=>{
+    container.querySelectorAll(".map-line").forEach(l=>l.remove());
+    const nodes={};
+    container.querySelectorAll(".map-node").forEach(n=>{
+      const r=n.getBoundingClientRect();
+      const cr=container.getBoundingClientRect();
+      nodes[n.dataset.node]={x:r.left-cr.left+r.width/2,y:r.top-cr.top+r.height/2};
+    });
+    step.edges.forEach(([from,to])=>{
+      if(!nodes[from]||!nodes[to])return;
+      const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+      svg.classList.add("map-line");
+      svg.style.cssText=`position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible`;
+      const line=document.createElementNS("http://www.w3.org/2000/svg","line");
+      line.setAttribute("x1",nodes[from].x);line.setAttribute("y1",nodes[from].y);
+      line.setAttribute("x2",nodes[to].x);line.setAttribute("y2",nodes[to].y);
+      line.setAttribute("stroke","rgba(97,218,251,0.2)");line.setAttribute("stroke-width","2");
+      line.setAttribute("stroke-dasharray","6 4");
+      svg.appendChild(line);
+      container.appendChild(svg);
+    });
+  };
+  setTimeout(update,50);
+  window.addEventListener("resize",update);
+}
+
+/* ═══════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════ */
+render();
+
+})();
+</script>
 </body>
 </html>
